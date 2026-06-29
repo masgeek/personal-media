@@ -1,0 +1,48 @@
+services:
+  paperless-ngx:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      PAPERLESS_REDIS: redis://redis:6379
+      PAPERLESS_DBHOST: postgres
+      PAPERLESS_DBPORT: 5432
+      PAPERLESS_DBNAME: ${PAPERLESS_DBNAME:-paperless}
+      PAPERLESS_DBUSER: ${POSTGRES_USER:-media}
+      PAPERLESS_DBPASS: ${POSTGRES_PASSWORD:?err}
+      PAPERLESS_SECRET_KEY: ${PAPERLESS_SECRET_KEY:?err}
+      PAPERLESS_URL: ${PAPERLESS_URL:-http://localhost:8010}
+      PAPERLESS_TIME_ZONE: ${TZ:-UTC}
+      PAPERLESS_OCR_LANGUAGE: ${PAPERLESS_OCR_LANGUAGE:-eng}
+    ports:
+      - 8010
+    volumes:
+      - paperless_data:/usr/src/paperless/data
+      - paperless_media:/usr/src/paperless/media
+      - ../files/paperless/consume:/usr/src/paperless/consume
+      - ../files/paperless/export:/usr/src/paperless/export
+    networks:
+      - dokploy-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  paperless_data:
+  paperless_media:
+
+networks:
+  dokploy-network:
+    external: true
