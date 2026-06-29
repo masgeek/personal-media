@@ -1,0 +1,32 @@
+services:
+  navidrome:
+    image: deluan/navidrome:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      ND_SCANINTERVAL: ${ND_SCANINTERVAL:-1h}
+      ND_LOGLEVEL: ${ND_LOGLEVEL:-info}
+      ND_BASEURL: ""
+      ND_MUSICFOLDER: /music
+      ND_DATAFOLDER: /data
+    ports:
+      - 4533
+    volumes:
+      - ../files/config/navidrome:/data
+      - /srv/media/music:/music:ro
+    networks:
+      - dokploy-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  dokploy-network:
+    external: true

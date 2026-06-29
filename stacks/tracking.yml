@@ -1,0 +1,64 @@
+services:
+  yamtrack:
+    image: ghcr.io/fuzzygrim/yamtrack:${YAMTRACK_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-media}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-media}
+      REDIS_URL: redis://redis:6379
+    ports:
+      - 8000
+    volumes:
+      - yamtrack_data:/app/data
+    networks:
+      - dokploy-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  jellystat:
+    image: cyfershepard/jellystat:latest
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      POSTGRES_IP: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-media}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?err}
+      POSTGRES_DB: ${POSTGRES_DB:-media}
+    ports:
+      - 3000
+    networks:
+      - dokploy-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  yamtrack_data:
+
+networks:
+  dokploy-network:
+    external: true

@@ -1,0 +1,4 @@
+include:
+  - stacks/core.yml
+  - stacks/tracking.yml
+  - stacks/media-servers.yml
