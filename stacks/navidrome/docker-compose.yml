@@ -1,6 +1,8 @@
 services:
   navidrome:
     image: deluan/navidrome:latest
+    container_name: navidrome
+    hostname: navidrome
     restart: unless-stopped
     environment:
       ND_SCANINTERVAL: ${ND_SCANINTERVAL:-1h}

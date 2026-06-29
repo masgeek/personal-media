@@ -2,27 +2,17 @@
 
 Docker Compose-based media infrastructure organized into logical stacks, configured for [Dokploy](https://dokploy.com) deployment.
 
-## Stacks
-
-| Stack | File | Services |
-|-------|------|----------|
-| Core | `stacks/core.yml` | postgres, redis |
-| Tracking | `stacks/tracking.yml` | yamtrack, jellystat |
-| Media Servers | `stacks/media-servers.yml` | navidrome |
-| Documents | `stacks/documents.yml` | paperless-ngx |
-| Management | `stacks/management.yml` | mealie |
-
 ## Services
 
-| Service | Purpose | Stack | Port | Web UI |
-|---------|---------|-------|------|--------|
-| **postgres** | Database for all dependent services | Core | — | — |
-| **redis** | Cache/queue for yamtrack and paperless-ngx | Core | — | — |
-| **yamtrack** | Personal media tracking (movies, shows, games, books) | Tracking | 8000 | `/` |
-| **jellystat** | Viewing statistics and analytics for Jellyfin | Tracking | 3000 | `/` |
-| **navidrome** | Music streaming server (Subsonic-API compatible) | Media Servers | 4533 | `/app` |
-| **paperless-ngx** | Document management system (scan, index, archive) | Documents | 8010 | `/` |
-| **mealie** | Recipe management, meal planning, and shopping lists | Management | 9000 | `/` |
+| Service | Purpose | File | Port | Web UI |
+|---------|---------|------|------|--------|
+| **postgres** | Database for all dependent services | `stacks/postgres/` | — | — |
+| **redis** | Cache/queue for yamtrack and paperless-ngx | `stacks/redis/` | — | — |
+| **yamtrack** | Personal media tracking (movies, shows, games, books) | `stacks/yamtrack/` | 8000 | `/` |
+| **jellystat** | Viewing statistics and analytics for Jellyfin | `stacks/jellystat/` | 3000 | `/` |
+| **navidrome** | Music streaming server (Subsonic-API compatible) | `stacks/navidrome/` | 4533 | `/app` |
+| **paperless-ngx** | Document management system (scan, index, archive) | `stacks/paperless-ngx/` | 8010 | `/` |
+| **mealie** | Recipe management, meal planning, and shopping lists | `stacks/mealie/` | 9000 | `/` |
 
 ## Deploy on Dokploy
 
@@ -38,7 +28,7 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 ## Conventions
 
 ### Dokploy
-- **No `container_name`** — breaks Dokploy logs, metrics, monitoring.
+- **`container_name` + `hostname`** — set on every service for predictable DNS and container naming.
 - **Network** — always use `dokploy-network` (external: true). Never custom networks.
 - **Ports** — container-only (e.g. `- 8000`), no host binding. Dokploy/Traefik routes via the network.
 - **Env vars** — pass directly via `environment:` blocks. Use `${VAR:?err}` for required vars, `${VAR:-default}` for optional. No `env_file` — vars come from the environment (Dokploy UI / shell).

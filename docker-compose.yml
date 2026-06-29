@@ -1,6 +1,8 @@
 include:
-  - stacks/core.yml
-  - stacks/tracking.yml
-  - stacks/media-servers.yml
-  - stacks/documents.yml
-  - stacks/management.yml
+  - stacks/postgres/docker-compose.yml
+  - stacks/redis/docker-compose.yml
+  - stacks/yamtrack/docker-compose.yml
+  - stacks/jellystat/docker-compose.yml
+  - stacks/navidrome/docker-compose.yml
+  - stacks/paperless-ngx/docker-compose.yml
+  - stacks/mealie/docker-compose.yml

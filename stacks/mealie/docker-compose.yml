@@ -1,6 +1,8 @@
 services:
   mealie:
     image: ghcr.io/mealie-recipes/mealie:latest
+    container_name: mealie
+    hostname: mealie
     restart: unless-stopped
     depends_on:
       postgres:
