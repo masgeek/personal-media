@@ -3,3 +3,4 @@ include:
   - stacks/tracking.yml
   - stacks/media-servers.yml
   - stacks/documents.yml
+  - stacks/management.yml
