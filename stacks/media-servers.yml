@@ -2,8 +2,6 @@ services:
   navidrome:
     image: deluan/navidrome:latest
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
       ND_SCANINTERVAL: ${ND_SCANINTERVAL:-1h}
       ND_LOGLEVEL: ${ND_LOGLEVEL:-info}

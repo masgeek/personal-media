@@ -7,10 +7,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    env_file:
-      - .env
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-media}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-media}
+      DATABASE_URL: postgres://${POSTGRES_USER:-media}:${POSTGRES_PASSWORD:?err}@postgres:5432/${POSTGRES_DB:-media}
       REDIS_URL: redis://redis:6379
     ports:
       - 8000
@@ -34,8 +32,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    env_file:
-      - .env
     environment:
       POSTGRES_IP: postgres
       POSTGRES_PORT: 5432

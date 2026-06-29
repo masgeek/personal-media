@@ -1,0 +1,40 @@
+services:
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:latest
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      MEALIE__DB_ENGINE: postgres
+      MEALIE__DB_NAME: ${MEALIE_DB_NAME:-mealie}
+      MEALIE__DB_USER: ${POSTGRES_USER:-media}
+      MEALIE__DB_PASS: ${POSTGRES_PASSWORD:?err}
+      MEALIE__DB_HOST: postgres
+      MEALIE__DB_PORT: 5432
+      MEALIE__SECRET_KEY: ${MEALIE_SECRET_KEY:?err}
+      MEALIE__ALLOW_SIGNUP: ${MEALIE_ALLOW_SIGNUP:-true}
+      MEALIE__DEFAULT_GROUP: Home
+      MEALIE__TZ: ${TZ:-UTC}
+    ports:
+      - 9000
+    volumes:
+      - mealie_data:/app/data
+    networks:
+      - dokploy-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  mealie_data:
+
+networks:
+  dokploy-network:
+    external: true
