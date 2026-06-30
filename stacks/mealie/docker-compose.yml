@@ -4,9 +4,6 @@ services:
     container_name: mealie
     hostname: mealie
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
       MEALIE__DB_ENGINE: postgres
       MEALIE__DB_NAME: ${MEALIE_DB_NAME:-mealie}

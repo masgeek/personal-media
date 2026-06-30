@@ -1,14 +1,9 @@
 services:
-  paperless-ngx:
+  paperless:
     image: ghcr.io/paperless-ngx/paperless-ngx:latest
-    container_name: paperless-ngx
-    hostname: paperless-ngx
+    container_name: paperless
+    hostname: paperless
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     environment:
       PAPERLESS_REDIS: redis://redis:6379
       PAPERLESS_DBHOST: postgres

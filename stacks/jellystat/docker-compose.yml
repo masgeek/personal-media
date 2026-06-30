@@ -4,9 +4,6 @@ services:
     container_name: jellystat
     hostname: jellystat
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
       POSTGRES_IP: postgres
       POSTGRES_PORT: 5432
