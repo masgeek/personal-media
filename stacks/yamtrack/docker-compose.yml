@@ -4,33 +4,42 @@ services:
     container_name: yamtrack
     hostname: yamtrack
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+    pull_policy: always
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-media}:${POSTGRES_PASSWORD:?err}@postgres:5432/${POSTGRES_DB:-media}
-      REDIS_URL: redis://redis:6379
+      DEBUG: ${DEBUG:-false}
+      TZ: ${TZ:-UTC}
+      ADMIN_ENABLED: ${ADMIN_ENABLED:-false}
+      SECRET: ${SECRET:?SECRET is required}
+      REDIS_URL: ${REDIS_URL:-redis://cache:6379}
+      REDIS_PREFIX: ${REDIS_PREFIX:-yamtrack}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_NAME: ${DB_DATABASE:-yamtrack}
+      DB_USER: ${DB_USERNAME:?DB_USERNAME is required}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      DB_PORT: ${DB_PORT:-5432}
+      REGISTRATION: ${REGISTRATION:-false}
+      TRAKT_API: ${TRAKT_CLIENT_ID}
+      TRAKT_API_SECRET: ${TRAKT_CLIENT_SECRET}
+      SIMKL_ID: ${SIMKL_CLIENT_ID}
+      SIMKL_SECRET: ${SIMKL_CLIENT_SECRET}
+      STEAM_API_KEY: ${STEAM_API_KEY}
     ports:
-      - 8000
-    volumes:
-      - yamtrack_data:/app/data
+      - "127.0.0.1:9800:8000"
     networks:
       - dokploy-network
+      - internal
     deploy:
       resources:
         limits:
           memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
     logging:
       driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
-
-volumes:
-  yamtrack_data:
-
-networks:
-  dokploy-network:
-    external: true
