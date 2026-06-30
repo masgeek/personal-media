@@ -37,8 +37,9 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 - **Logging** — always use json-file driver with `max-size: 10m` / `max-file: 3`.
 
 ### Stacks
-- Each stack file is self-contained (services + volumes + network reference).
-- Shared infrastructure (postgres, redis) lives in `core.yml`.
+- Each service has its own folder under `stacks/` with a `docker-compose.yml`.
+- No `depends_on` — all dependencies (postgres, redis) are external and assumed available.
+- All services connect via `dokploy-network`.
 - A new service goes in a new or existing stack file depending on category.
 - All stacks are included from root `docker-compose.yml`.
 
