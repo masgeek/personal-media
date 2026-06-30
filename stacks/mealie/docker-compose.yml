@@ -1,9 +1,18 @@
+networks:
+  internal:
+    name: internal
+    external: false
+  dokploy-network:
+    name: dokploy-network
+    external: true
+
 services:
   mealie:
-    image: ghcr.io/mealie-recipes/mealie:latest
+    image: ghcr.io/mealie-recipes/mealie:${MEALIE_TAG:-v3.20.1} 
     container_name: mealie
     hostname: mealie
-    restart: unless-stopped
+    restart: always
+    pull_policy: always
     environment:
       MEALIE__DB_ENGINE: postgres
       MEALIE__DB_NAME: ${MEALIE_DB_NAME:-mealie}
@@ -16,11 +25,12 @@ services:
       MEALIE__DEFAULT_GROUP: Home
       MEALIE__TZ: ${TZ:-UTC}
     ports:
-      - 9000
+        - "127.0.0.1:9925:9000" 
     volumes:
-      - mealie_data:/app/data
+      - mealie-data:/app/data/
     networks:
       - dokploy-network
+      - internal
     deploy:
       resources:
         limits:
@@ -32,8 +42,5 @@ services:
         max-file: "3"
 
 volumes:
-  mealie_data:
-
-networks:
-  dokploy-network:
-    external: true
+  mealie-data:
+    name: mealie-data
