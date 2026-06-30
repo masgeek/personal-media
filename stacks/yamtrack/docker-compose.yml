@@ -1,3 +1,11 @@
+networks:
+  internal:
+    name: internal
+    external: false
+  dokploy-network:
+    name: dokploy-network
+    external: true
+
 services:
   yamtrack:
     image: ghcr.io/fuzzygrim/yamtrack:${YAMTRACK_TAG:-latest}
