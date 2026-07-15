@@ -32,7 +32,7 @@ services:
       SIMKL_SECRET: ${SIMKL_CLIENT_SECRET}
       STEAM_API_KEY: ${STEAM_API_KEY}
     ports:
-      - "127.0.0.1:9800:8000"
+      - "127.0.0.1:8800:8000"
     networks:
       - dokploy-network
       - internal

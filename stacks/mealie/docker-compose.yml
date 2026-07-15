@@ -25,7 +25,7 @@ services:
       MEALIE__DEFAULT_GROUP: Home
       MEALIE__TZ: ${TZ:-UTC}
     ports:
-        - "127.0.0.1:9925:9000" 
+        - "127.0.0.1:8925:9000" 
     volumes:
       - mealie-data:/app/data/
     networks:
