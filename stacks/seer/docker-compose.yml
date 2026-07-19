@@ -1,0 +1,37 @@
+networks:
+  internal:
+    name: internal
+    external: false
+  dokploy-network:
+    name: dokploy-network
+    external: true
+
+
+services:
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    restart: unless-stopped
+    pull_policy: always
+    init: true
+    container_name: seerr
+    hostname: seerr
+    environment:
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+      TZ: ${TZ:-UTC}
+    ports:
+      - "127.0.0.1:5055:5055"
+    networks:
+      - dokploy-network
+      - internal
+    volumes:
+      - seer-data:/app/config
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/settings/public || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
+
+volumes:
+  seer-data:
+    name: seer-data
