@@ -18,6 +18,11 @@ services:
       timeout: 3s
       interval: 15s
       retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   seer-data:
