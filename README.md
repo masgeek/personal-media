@@ -14,6 +14,7 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 | **paperless-ngx** | Document management system (scan, index, archive) | `stacks/paperless-ngx/` | 8010 | `/` |
 | **mealie** | Recipe management, meal planning, and shopping lists | `stacks/mealie/` | 9000 | `/` |
 | **seerr** | Media request and discovery management | `stacks/seer/` | 5055 | `/` |
+| **homarr** | Dashboard for self-hosted services | `stacks/homarr/` | 7575 | `/` |
 
 ## Deploy on Dokploy
 
@@ -24,7 +25,44 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 5. Configure domains via the **Domains** tab for each service
 6. Click **Deploy**
 
-> Data persists in `../files/` outside the repo, safe from redeploys. Media mounts (`/srv/media`) are expected to exist on the host. Use the Dokploy **Volume Backups** feature for automated backups of named volumes (`postgres_data`, `redis_data`, `yamtrack_data`, `paperless_*`, `seer-data`).
+> Data persists in `../files/` outside the repo, safe from redeploys. Media mounts (`/srv/media`) are expected to exist on the host. Use the Dokploy **Volume Backups** feature for automated backups of named volumes (`postgres_data`, `redis_data`, `yamtrack_data`, `paperless_*`, `seer-data`, `homarr_data`).
+
+## Homarr Setup
+
+Homarr is deployed from `stacks/homarr/docker-compose.yml` and is available on container port `7575` through Dokploy.
+
+### Required Secret
+
+Set `HOMARR_SECRET_ENCRYPTION_KEY` in Dokploy before deploying. Generate a 64-character hexadecimal key with:
+
+```bash
+openssl rand -hex 32
+```
+
+Keep this key unchanged after the first deployment. Changing it can make encrypted Homarr data unreadable.
+
+### Monitor Host Services
+
+The media automation services run directly on the host, so Homarr cannot discover them through Docker. Add them manually in the Homarr UI using these URLs:
+
+| Service | URL |
+|---------|-----|
+| Jellyfin | `http://host.docker.internal:8096` |
+| Radarr | `http://host.docker.internal:7878` |
+| Sonarr | `http://host.docker.internal:8989` |
+| Bazarr | `http://host.docker.internal:6767` |
+| Prowlarr | `http://host.docker.internal:9696` |
+| qBittorrent | `http://host.docker.internal:8080` |
+
+Use the service's API key when configuring its Homarr widget to show health, queues, downloads, and other details. The API key is configured in each host service, not in this repository.
+
+The Homarr Compose file maps `host.docker.internal` to the Docker host gateway. Host services must listen on an address reachable from Docker, not only on `127.0.0.1`. If the alias does not work in your environment, use the host's LAN IP or an internal DNS name instead.
+
+Do not expose Radarr, Sonarr, Bazarr, Prowlarr, or qBittorrent directly to the public internet. Restrict their host firewall rules or place them behind an authenticated internal reverse proxy.
+
+### Monitor Docker Services
+
+Homarr has read-only access to `/var/run/docker.sock` for Docker integration. This allows it to monitor containers in the Docker daemon, but it does not monitor host-installed services. Keep the socket mount read-only and back up the `homarr_data` volume with Dokploy's **Volume Backups** feature.
 
 ## Conventions
 

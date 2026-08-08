@@ -7,3 +7,4 @@ include:
   - stacks/paperless-ngx/docker-compose.yml
   - stacks/mealie/docker-compose.yml
   - stacks/seer/docker-compose.yml
+  - stacks/homarr/docker-compose.yml
