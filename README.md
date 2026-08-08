@@ -33,10 +33,31 @@ Homarr is deployed from `stacks/homarr/docker-compose.yml` and is available on c
 
 ### Required Secret
 
-Set `HOMARR_SECRET_ENCRYPTION_KEY` in Dokploy before deploying. Generate a 64-character hexadecimal key with:
+Set `HOMARR_SECRET_ENCRYPTION_KEY` in Dokploy before deploying. The value must be a randomly generated 32-byte key, represented as 64 hexadecimal characters.
+
+On Linux or macOS, run:
 
 ```bash
 openssl rand -hex 32
+```
+
+On Windows PowerShell, run:
+
+```powershell
+$bytes = [System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32)
+[Convert]::ToHexString($bytes).ToLowerInvariant()
+```
+
+Copy the resulting 64-character value into the Dokploy environment variable:
+
+```text
+HOMARR_SECRET_ENCRYPTION_KEY=your_generated_key
+```
+
+Do not include quotes or commit the real key to Git. If `openssl` is available in the deployment environment, this also works:
+
+```bash
+docker run --rm alpine/openssl rand -hex 32
 ```
 
 Keep this key unchanged after the first deployment. Changing it can make encrypted Homarr data unreadable.
