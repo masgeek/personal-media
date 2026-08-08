@@ -13,6 +13,7 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 | **navidrome** | Music streaming server (Subsonic-API compatible) | `stacks/navidrome/` | 4533 | `/app` |
 | **paperless-ngx** | Document management system (scan, index, archive) | `stacks/paperless-ngx/` | 8010 | `/` |
 | **mealie** | Recipe management, meal planning, and shopping lists | `stacks/mealie/` | 9000 | `/` |
+| **seerr** | Media request and discovery management | `stacks/seer/` | 5055 | `/` |
 
 ## Deploy on Dokploy
 
@@ -23,7 +24,7 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 5. Configure domains via the **Domains** tab for each service
 6. Click **Deploy**
 
-> Data persists in `../files/` outside the repo, safe from redeploys. Media mounts (`/srv/media`) are expected to exist on the host. Use the Dokploy **Volume Backups** feature for automated backups of named volumes (`postgres_data`, `redis_data`, `yamtrack_data`, `paperless_*`).
+> Data persists in `../files/` outside the repo, safe from redeploys. Media mounts (`/srv/media`) are expected to exist on the host. Use the Dokploy **Volume Backups** feature for automated backups of named volumes (`postgres_data`, `redis_data`, `yamtrack_data`, `paperless_*`, `seer-data`).
 
 ## Conventions
 

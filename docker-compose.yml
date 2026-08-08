@@ -6,3 +6,4 @@ include:
   - stacks/navidrome/docker-compose.yml
   - stacks/paperless-ngx/docker-compose.yml
   - stacks/mealie/docker-compose.yml
+  - stacks/seer/docker-compose.yml
