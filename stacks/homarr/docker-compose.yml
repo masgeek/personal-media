@@ -9,12 +9,13 @@ services:
     ports:
       - "127.0.0.1:7575:7575"
     volumes:
-      - homarr_data:/appdata
+      - homarr-data:/appdata
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - dokploy-network
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    network_mode: host
+    # networks:
+    #   - dokploy-network
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
     deploy:
       resources:
         limits:
@@ -26,9 +27,5 @@ services:
         max-file: "3"
 
 volumes:
-  homarr_data:
-    name: homarr_data
-
-networks:
-  dokploy-network:
-    external: true
+  homarr-data:
+    name: homarr-data
