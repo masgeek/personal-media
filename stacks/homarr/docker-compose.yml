@@ -6,12 +6,15 @@ services:
     restart: unless-stopped
     environment:
       SECRET_ENCRYPTION_KEY: ${HOMARR_SECRET_ENCRYPTION_KEY:?HOMARR_SECRET_ENCRYPTION_KEY is required}
-      HOSTNAME: 127.0.0.1
-      PORT: ${HOMARR_PORT:-7575}
+    ports:
+      - "7576:7575"
     volumes:
       - homarr-data:/appdata
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    network_mode: host
+    networks:
+      - dokploy-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     deploy:
       resources:
         limits:
@@ -25,3 +28,7 @@ services:
 volumes:
   homarr-data:
     name: homarr-data
+
+networks:
+  dokploy-network:
+    external: true

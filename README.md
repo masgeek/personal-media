@@ -14,7 +14,7 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 | **paperless-ngx** | Document management system (scan, index, archive) | `stacks/paperless-ngx/` | 8010 | `/` |
 | **mealie** | Recipe management, meal planning, and shopping lists | `stacks/mealie/` | 9000 | `/` |
 | **seerr** | Media request and discovery management | `stacks/seer/` | 5055 | `/` |
-| **homarr** | Dashboard for self-hosted services | `stacks/homarr/` | 7575 | `/` |
+| **homarr** | Dashboard for self-hosted services | `stacks/homarr/` | 7576 | `/` |
 
 ## Deploy on Dokploy
 
@@ -29,7 +29,7 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 
 ## Homarr Setup
 
-Homarr is deployed from `stacks/homarr/docker-compose.yml` and uses host networking, like Seerr. Access it directly at `http://<host-ip>:7575`.
+Homarr is deployed from `stacks/homarr/docker-compose.yml` and is available at `http://<host-ip>:7576`. Its internal container port remains `7575`; host port `7575` is reserved by Dokploy's nginx.
 
 ### Required Secret
 
