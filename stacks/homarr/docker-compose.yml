@@ -6,8 +6,8 @@ services:
     restart: unless-stopped
     environment:
       SECRET_ENCRYPTION_KEY: ${HOMARR_SECRET_ENCRYPTION_KEY:?HOMARR_SECRET_ENCRYPTION_KEY is required}
-    ports:
-      - "127.0.0.1:7575:7575"
+    # ports:
+    #   - "127.0.0.1:7575:7575"
     volumes:
       - homarr-data:/appdata
       - /var/run/docker.sock:/var/run/docker.sock:ro
