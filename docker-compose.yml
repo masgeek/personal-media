@@ -8,3 +8,4 @@ include:
   - stacks/mealie/docker-compose.yml
   - stacks/seer/docker-compose.yml
   - stacks/homarr/docker-compose.yml
+  - stacks/bazarr/docker-compose.yml

@@ -15,6 +15,7 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 | **mealie** | Recipe management, meal planning, and shopping lists | `stacks/mealie/` | 9000 | `/` |
 | **seerr** | Media request and discovery management | `stacks/seer/` | 5055 | `/` |
 | **homarr** | Dashboard for self-hosted services | `stacks/homarr/` | 7576 | `/` |
+| **bazarr** | Subtitle management for Radarr and Sonarr | `stacks/bazarr/` | 6767 | `/` |
 
 ## Deploy on Dokploy
 
@@ -25,7 +26,30 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 5. Configure domains via the **Domains** tab for each service
 6. Click **Deploy**
 
-> Data persists in `../files/` outside the repo, safe from redeploys. Media mounts (`/srv/media`) are expected to exist on the host. Use the Dokploy **Volume Backups** feature for automated backups of named volumes (`postgres_data`, `redis_data`, `yamtrack_data`, `paperless_*`, `seer-data`, `homarr-data`).
+> Data persists in `../files/` outside the repo, safe from redeploys. Media mounts (`/srv/media`) are expected to exist on the host. Use the Dokploy **Volume Backups** feature for automated backups of named volumes (`postgres_data`, `redis_data`, `yamtrack_data`, `paperless_*`, `seer-data`, `homarr-data`, `bazarr-config`).
+
+## Bazarr Setup
+
+Bazarr uses host networking so it can connect to the host-installed Sonarr and Radarr services through `localhost`. It is available directly at `http://<host-ip>:6767` and is not routed through Dokploy's network proxy.
+
+The stack mounts these host media directories read/write at the same paths inside the container, so paths reported by the host-installed Sonarr and Radarr services remain valid:
+
+- `/mnt/d/Entertainment/Movies` → `/mnt/d/Entertainment/Movies`
+- `/mnt/d/Entertainment/TV` → `/mnt/d/Entertainment/TV`
+
+The `/mnt/d/Entertainment/Import` directory is intentionally not mounted.
+
+After deployment, open `http://<host-ip>:6767` and configure:
+
+1. Sonarr at `http://127.0.0.1:8989`, using the Sonarr API key.
+2. Radarr at `http://127.0.0.1:7878`, using the Radarr API key.
+3. Sonarr root folders under `/mnt/d/Entertainment/TV`.
+4. Radarr root folders under `/mnt/d/Entertainment/Movies`.
+5. Subtitle languages and providers, then enable automatic searches.
+
+Set `BAZARR_PUID` and `BAZARR_PGID` to the numeric user and group that can write subtitle files. On the Docker host, these can be checked with `id -u` and `id -g`. The Docker daemon must also have access to `/mnt/d/Entertainment`; host paths from another machine are not available to the container.
+
+The Bazarr image is pinned through `BAZARR_VERSION`. Update that value deliberately when upgrading rather than tracking `latest`. Restrict access to port `6767` with the host firewall or an authenticated internal reverse proxy.
 
 ## Homarr Setup
 
