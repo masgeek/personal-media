@@ -1,6 +1,6 @@
 services:
   bazarr:
-    image: lscr.io/linuxserver/bazarr:${BAZARR_VERSION:-1.6.0-ls360}
+    image: lscr.io/linuxserver/bazarr:${BAZARR_VERSION:-1.6.0}
     container_name: bazarr
     hostname: bazarr
     restart: unless-stopped
