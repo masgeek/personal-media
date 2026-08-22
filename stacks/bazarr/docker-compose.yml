@@ -11,8 +11,8 @@ services:
       TZ: ${TZ:-UTC}
     volumes:
       - bazarr-config:/config
-      - "D:/Entertainment/Movies:/movies"
-      - "D:/Entertainment/TV:/tv"
+      # - "D:/Entertainment/Movies:/movies"
+      # - "D:/Entertainment/TV:/tv"
     deploy:
       resources:
         limits:
