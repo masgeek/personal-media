@@ -32,22 +32,22 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 
 Bazarr uses host networking so it can connect to the host-installed Sonarr and Radarr services through `localhost`. It is available directly at `http://<host-ip>:6767` and is not routed through Dokploy's network proxy.
 
-The stack mounts these host media directories read/write at the same paths inside the container, so paths reported by the host-installed Sonarr and Radarr services remain valid:
+The stack mounts these Windows host media directories read/write:
 
-- `/mnt/d/Entertainment/Movies` → `/mnt/d/Entertainment/Movies`
-- `/mnt/d/Entertainment/TV` → `/mnt/d/Entertainment/TV`
+- `D:\Entertainment\Movies` → `/movies`
+- `D:\Entertainment\TV` → `/tv`
 
-The `/mnt/d/Entertainment/Import` directory is intentionally not mounted.
+The `D:\Entertainment\Import` directory is intentionally not mounted.
 
 After deployment, open `http://<host-ip>:6767` and configure:
 
 1. Sonarr at `http://127.0.0.1:8989`, using the Sonarr API key.
 2. Radarr at `http://127.0.0.1:7878`, using the Radarr API key.
-3. Sonarr root folders under `/mnt/d/Entertainment/TV`.
-4. Radarr root folders under `/mnt/d/Entertainment/Movies`.
-5. Subtitle languages and providers, then enable automatic searches.
+3. Add a Sonarr path mapping from `D:\Entertainment\TV` to `/tv`.
+4. Add a Radarr path mapping from `D:\Entertainment\Movies` to `/movies`.
+5. Configure subtitle languages and providers, then enable automatic searches.
 
-Set `BAZARR_PUID` and `BAZARR_PGID` to the numeric user and group that can write subtitle files. On the Docker host, these can be checked with `id -u` and `id -g`. The Docker daemon must also have access to `/mnt/d/Entertainment`; host paths from another machine are not available to the container.
+Docker Desktop must have permission to access the `D:` drive. The container paths `/movies` and `/tv` are the paths to use when configuring Bazarr. Since Sonarr and Radarr run on Windows, their API responses use `D:\Entertainment\...` paths and require the mappings above.
 
 The Bazarr image is pinned through `BAZARR_VERSION`. Update that value deliberately when upgrading rather than tracking `latest`. Restrict access to port `6767` with the host firewall or an authenticated internal reverse proxy.
 
