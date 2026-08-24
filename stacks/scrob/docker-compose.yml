@@ -1,0 +1,49 @@
+networks:
+  internal:
+    name: internal
+    external: false
+  dokploy-network:
+    name: dokploy-network
+    external: true
+
+services:
+  scrob:
+    image: bellamy/scrob:${SCROB_TAG:-latest}
+    container_name: scrob
+    hostname: scrob
+    restart: unless-stopped
+    # pull_policy: always
+    environment:
+        TZ: ${TZ:-Africa/Nairobi}
+        DATABASE_URL: ${DATABASE_URL:?DATABASE_URL IS required}
+        SECRET_KEY: ${SECRET_KEY:?SECRET_KEY IS required}
+        ENABLE_REGISTRATIONS: ${ENABLE_REGISTRATIONS:-false}
+        REQUIRE_EMAIL_VALIDATION: ${REQUIRE_EMAIL_VALIDATION:-false}
+        REGISTRATION_MAX_ALLOWED_USERS: ${REGISTRATION_MAX_ALLOWED_USERS:-0}
+    ports:
+      - "127.0.0.1:8900:7330"
+    networks:
+      - dokploy-network
+      - internal
+    volumes:
+      - scrob-data:/app/backend/data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:7330 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  scrob-data:
+    name: scrob-data
+    driver: local
