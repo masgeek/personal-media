@@ -19,8 +19,9 @@ services:
       - "53:53/udp"
       - "8081:80/tcp"
 
-    networks:
-      - pihole-network
+    # networks:
+    #   - pihole-network
+    network_mode: "host"
 
     deploy:
       resources:
