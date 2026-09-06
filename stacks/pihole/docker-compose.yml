@@ -14,10 +14,10 @@ services:
     volumes:
       - pihole_data:/etc/pihole
 
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-      - "8081:80/tcp"
+    # ports:
+    #   - "53:53/tcp"
+    #   - "53:53/udp"
+    #   - "8081:80/tcp"
 
     # networks:
     #   - pihole-network
