@@ -1,0 +1,39 @@
+services:
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    hostname: pihole
+    restart: unless-stopped
+
+    environment:
+      TZ: Africa/Nairobi
+      FTLCONF_webserver_api_password: "${PIHOLE_PASSWORD?PIHOLE_PASSWORD is required}"
+      FTLCONF_dns_listeningMode: "ALL"
+
+    volumes:
+      - pihole_data:/etc/pihole
+
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+
+    networks:
+      - dokploy-network
+
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  pihole_data:
+
+networks:
+  dokploy-network:
+    external: true
