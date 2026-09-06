@@ -9,6 +9,7 @@ services:
       TZ: Africa/Nairobi
       FTLCONF_webserver_api_password: "${PIHOLE_PASSWORD?PIHOLE_PASSWORD is required}"
       FTLCONF_dns_listeningMode: "ALL"
+      FTLCONF_webserver_port: "8081"
       FTLCONF_dns_upstreams: "1.1.1.1;1.0.0.1"
 
     volumes:
