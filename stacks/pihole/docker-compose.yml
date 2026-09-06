@@ -17,9 +17,10 @@ services:
     ports:
       - "53:53/tcp"
       - "53:53/udp"
+      - "8081:80/tcp"
 
     networks:
-      - dokploy-network
+      - pihole-network
 
     deploy:
       resources:
@@ -37,5 +38,5 @@ volumes:
     name: pihole_data
 
 networks:
-  dokploy-network:
-    external: true
+  pihole-network:
+    driver: bridge
