@@ -19,7 +19,7 @@ services:
         FRONTEND_URL: ${FRONTEND_URL:?FRONTEND_URL IS required}
         SERVER_ADMIN_ACCESS_TOKEN: ${SERVER_ADMIN_ACCESS_TOKEN:?SERVER_ADMIN_ACCESS_TOKEN IS required}
     ports:
-      - "127.0.0.1:8900:7330"
+      - "127.0.0.1:8950:8000"
     networks:
       - dokploy-network
       - internal
