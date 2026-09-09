@@ -1,0 +1,29 @@
+networks:
+  internal:
+    name: internal
+    external: false
+  dokploy-network:
+    name: dokploy-network
+    external: true
+
+services:
+  ryot:
+    image: ghcr.io/ignisda/ryot:${RYOT_TAG:-v10}
+    container_name: ryot
+    hostname: ryot
+    restart: unless-stopped
+    # pull_policy: always
+    environment:
+        TZ: ${TZ:-Africa/Nairobi}
+        DATABASE_URL: ${DATABASE_URL:?DATABASE_URL IS required}
+        FRONTEND_URL: ${FRONTEND_URL:?FRONTEND_URL IS required}
+        SERVER_ADMIN_ACCESS_TOKEN: ${SERVER_ADMIN_ACCESS_TOKEN:?SERVER_ADMIN_ACCESS_TOKEN IS required}
+    ports:
+      - "127.0.0.1:8900:7330"
+    networks:
+      - dokploy-network
+      - internal
+    deploy:
+      resources:
+        limits:
+          memory: 1G
