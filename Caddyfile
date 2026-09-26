@@ -1,0 +1,68 @@
+# Consolidated reverse proxy configuration.
+#
+# This is the single Caddyfile for every proxied service in this repository.
+# It is mounted read-only into the Caddy service:
+#
+#   volumes:
+#     - ./Caddyfile:/etc/caddy/Caddyfile:ro
+#
+# Caddy must be attached to dokploy-network, because every upstream below is
+# resolved by service name. Do not also set a Dokploy domain route for these
+# hostnames; two proxies terminating TLS for the same name will conflict.
+#
+# LAN-only services (jellystat, homarr, seerr, bazarr, pihole) are intentionally
+# absent. They have no Caddyfile and are reached on the host port directly.
+
+# Shared hardening applied to every site below.
+(common) {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
+
+# Media tracker. Requires FRONTEND_URL in the yamtrack env to match, and
+# SECRET, DB_USERNAME, and DB_PASSWORD to be set.
+track.munywele.co.ke {
+	import common
+	reverse_proxy yamtrack:8000
+}
+
+# Media tracker. Requires FRONTEND_URL in the ryot env to match this hostname.
+ryot.munywele.co.ke {
+	import common
+	reverse_proxy ryot:8000
+}
+
+# Media tracker with Trakt scrobbling. Requires SERVER_URL in the scrob env to
+# match this hostname.
+scrob.munywele.co.ke {
+	import common
+	reverse_proxy scrob:7330
+}
+
+# Recipe manager. Set MEALIE__ALLOW_SIGNUP to false after creating the first
+# account. The loopback binding 127.0.0.1:8925 is unaffected by this proxy.
+mealie.munywele.co.ke {
+	import common
+	reverse_proxy mealie:9000
+}
+
+# Document manager. Requires PAPERLESS_URL and PAPERLESS_CSRF_TRUSTED_ORIGINS
+# to match this hostname. The raised body limit is needed for document uploads.
+paperless.munywele.co.ke {
+	import common
+	request_body {
+		max_size 100MB
+	}
+	reverse_proxy paperless:8010
+}
