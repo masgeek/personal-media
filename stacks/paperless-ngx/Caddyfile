@@ -1,0 +1,38 @@
+# Paperless-ngx — reverse proxy example
+#
+# Upstream: paperless listens on 8010 inside the container and is reachable by
+# service name on dokploy-network.
+#
+# Required: the container must be told its public URL, otherwise generated
+# links and redirects will point at http://localhost:8010. Set these in the
+# Dokploy environment before deploying:
+#
+#   PAPERLESS_URL=https://paperless.munywele.co.ke
+#   PAPERLESS_CSRF_TRUSTED_ORIGINS=["https://paperless.munywele.co.ke"]
+#
+# The request body limit is raised because document uploads and archive
+# downloads exceed Caddy's default.
+#
+# Do not enable this while Dokploy also has a domain route for this service.
+
+paperless.munywele.co.ke {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	request_body {
+		max_size 100MB
+	}
+
+	reverse_proxy paperless:8010
+
+	log {
+		output stdout
+		format console
+	}
+}
