@@ -16,7 +16,8 @@ services:
     environment:
         TZ: ${TZ:-Africa/Nairobi}
         DATABASE_URL: ${DATABASE_URL:?DATABASE_URL IS required}
-        SECRET_KEY: ${SECRET:?SECRET IS required}
+        SECRET_KEY: ${SECRET:?SECRET is required}
+        SERVER_URL: ${SERVER_URL:-https://scrob.munywele.co.ke}
         ENABLE_REGISTRATIONS: ${REGISTRATION:-false}
         REQUIRE_EMAIL_VALIDATION: ${REQUIRE_EMAIL_VALIDATION:-false}
         REGISTRATION_MAX_ALLOWED_USERS: ${REGISTRATION_MAX_ALLOWED_USERS:-0}

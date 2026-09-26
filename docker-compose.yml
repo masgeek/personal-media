@@ -3,7 +3,6 @@ include:
   - stacks/redis/docker-compose.yml
   - stacks/yamtrack/docker-compose.yml
   - stacks/jellystat/docker-compose.yml
-  - stacks/navidrome/docker-compose.yml
   - stacks/paperless-ngx/docker-compose.yml
   - stacks/mealie/docker-compose.yml
   - stacks/seer/docker-compose.yml
