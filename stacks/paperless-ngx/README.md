@@ -13,10 +13,10 @@ Document management: scan, index, and archive documents with OCR.
 
 ## Reverse Proxy
 
-`Caddyfile.example` in this directory proxies `paperless.munywele.co.ke` to `paperless:8010` and raises the request body limit for uploads. Caddy must be attached to `dokploy-network` to resolve the `paperless` service name.
+`Caddyfile` in this directory proxies `paperless.munywele.co.ke` to `paperless:8010` and raises the request body limit for uploads. Caddy must be attached to `dokploy-network` to resolve the `paperless` service name.
 
 ```bash
-cp Caddyfile.example /path/to/caddy/Caddyfile
+cp Caddyfile /path/to/caddy/Caddyfile
 ```
 
 Do not run this example while Dokploy also has a domain route for Paperless. Two proxies terminating TLS for the same hostname will conflict.

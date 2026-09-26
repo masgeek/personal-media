@@ -10,14 +10,14 @@ Personal media tracker for movies, shows, anime, games, books, manga, and podcas
 | Network | `dokploy-network` |
 | Upstream address | `yamtrack:8000` |
 | Local-only host binding | `127.0.0.1:8800` |
-| Reverse proxy domain | `yamtrack.munywele.co.ke` |
+| Reverse proxy domain | `track.munywele.co.ke` |
 
 ## Reverse Proxy
 
-`Caddyfile.example` in this directory proxies `yamtrack.munywele.co.ke` to `yamtrack:8000`.
+`Caddyfile` in this directory proxies `track.munywele.co.ke` to `yamtrack:8000`.
 
 ```bash
-cp Caddyfile.example /path/to/caddy/Caddyfile
+cp Caddyfile /path/to/caddy/Caddyfile
 ```
 
 Caddy must be attached to `dokploy-network` to resolve the `yamtrack` service name:

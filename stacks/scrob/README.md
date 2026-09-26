@@ -14,10 +14,10 @@ Scrobble tracking for music playback, with Last.fm integration.
 
 ## Reverse Proxy
 
-`Caddyfile.example` in this directory proxies `scrob.munywele.co.ke` to `scrob:7330`. Caddy must be attached to `dokploy-network` to resolve the `scrob` service name.
+`Caddyfile` in this directory proxies `scrob.munywele.co.ke` to `scrob:7330`. Caddy must be attached to `dokploy-network` to resolve the `scrob` service name.
 
 ```bash
-cp Caddyfile.example /path/to/caddy/Caddyfile
+cp Caddyfile /path/to/caddy/Caddyfile
 ```
 
 Do not run this example while Dokploy also has a domain route for Scrob. Two proxies terminating TLS for the same hostname will conflict.

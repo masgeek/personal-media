@@ -157,7 +157,7 @@ docker compose -f stacks/homarr/docker-compose.yml up -d
 ## Reverse Proxy with Caddy
 
 Dokploy already terminates TLS through Traefik using the **Domains** tab. The
-`Caddyfile.example` files are for the alternative case where a standalone Caddy
+`Caddyfile` files are for the alternative case where a standalone Caddy
 instance owns the hostname instead.
 
 Only the trackers, Mealie, and Paperless-ngx are proxied. Everything else in
@@ -166,7 +166,7 @@ Caddyfile:
 
 | Service | Domain | Upstream | In root compose |
 |---------|--------|----------|-----------------|
-| yamtrack | `yamtrack.munywele.co.ke` | `yamtrack:8000` | yes |
+| yamtrack | `track.munywele.co.ke` | `yamtrack:8000` | yes |
 | ryot | `ryot.munywele.co.ke` | `ryot:8000` | no |
 | scrob | `scrob.munywele.co.ke` | `scrob:7330` | no |
 | mealie | `mealie.munywele.co.ke` | `mealie:9000` | yes |
@@ -225,6 +225,7 @@ need configuration changes to work correctly behind a proxy:
 
 | Service | Required change |
 |---------|-----------------|
+| paperless | set `PAPERLESS_URL` and `PAPERLESS_CSRF_TRUSTED_ORIGINS` to the public URL |
 | ryot | `FRONTEND_URL` must match the proxied hostname |
 | mealie | set `MEALIE__ALLOW_SIGNUP` to `false` after the first account exists |
 
