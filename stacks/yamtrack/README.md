@@ -14,13 +14,7 @@ Personal media tracker for movies, shows, anime, games, books, manga, and podcas
 
 ## Reverse Proxy
 
-`Caddyfile` in this directory proxies `track.munywele.co.ke` to `yamtrack:8000`.
-
-```bash
-cp Caddyfile /path/to/caddy/Caddyfile
-```
-
-Caddy must be attached to `dokploy-network` to resolve the `yamtrack` service name:
+The consolidated `Caddyfile` at the repository root proxies `track.munywele.co.ke` to `yamtrack:8000`. Caddy must be attached to `dokploy-network` to resolve the `yamtrack` service name:
 
 ```yaml
 services:

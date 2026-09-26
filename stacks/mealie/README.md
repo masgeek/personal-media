@@ -14,13 +14,7 @@ Recipe management, meal planning, and shopping lists.
 
 ## Reverse Proxy
 
-`Caddyfile` in this directory proxies `mealie.munywele.co.ke` to `mealie:9000`. Caddy must be attached to `dokploy-network` to resolve the `mealie` service name.
-
-```bash
-cp Caddyfile /path/to/caddy/Caddyfile
-```
-
-Do not run this example while Dokploy also has a domain route for Mealie. Two proxies terminating TLS for the same hostname will conflict.
+The consolidated `Caddyfile` at the repository root proxies `mealie.munywele.co.ke` to `mealie:9000`. Caddy must be attached to `dokploy-network` to resolve the `mealie` service name.
 
 ## Required Environment
 

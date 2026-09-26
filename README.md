@@ -4,21 +4,20 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 
 ## Services
 
-| Service | Purpose | File | Port | Web UI |
-|---------|---------|------|------|--------|
-| **postgres** | Database for all dependent services | `stacks/postgres/` | — | — |
-| **redis** | Cache/queue for yamtrack and paperless-ngx | `stacks/redis/` | — | — |
-| **yamtrack** | Personal media tracking (movies, shows, games, books) | `stacks/yamtrack/` | 8000 | `/` |
-| **jellystat** | Viewing statistics and analytics for Jellyfin | `stacks/jellystat/` | 3000 | `/` |
-| **navidrome** | Music streaming server (Subsonic-API compatible) | `stacks/navidrome/` | 4533 | `/app` |
-| **paperless-ngx** | Document management system (scan, index, archive) | `stacks/paperless-ngx/` | 8010 | `/` |
-| **mealie** | Recipe management, meal planning, and shopping lists | `stacks/mealie/` | 9000 | `/` |
-| **seerr** | Media request and discovery management | `stacks/seer/` | 5055 | `/` |
-| **homarr** | Dashboard for self-hosted services | `stacks/homarr/` | 7576 | `/` |
-| **bazarr** | Subtitle management for Radarr and Sonarr | `stacks/bazarr/` | 6767 | `/` |
-| **ryot** | Media tracking and discovery | `stacks/ryot/` | 8000 | `/` |
-| **scrob** | Music scrobbling with Last.fm | `stacks/scrob/` | 7330 | `/` |
-| **pihole** | Network-wide ad blocking via DNS | `stacks/pihole/` | 8081 | `/admin` |
+| Service | Purpose | File | Container port | Host binding |
+|---------|---------|------|----------------|--------------|
+| **postgres** | Database for all dependent services | `stacks/postgres/` | — | none, internal only |
+| **redis** | Cache/queue for yamtrack and paperless-ngx | `stacks/redis/` | — | none, internal only |
+| **yamtrack** | Personal media tracking (movies, shows, games, books) | `stacks/yamtrack/` | 8000 | `127.0.0.1:8800` |
+| **jellystat** | Viewing statistics and analytics for Jellyfin | `stacks/jellystat/` | 3000 | none, container-only |
+| **paperless-ngx** | Document management system (scan, index, archive) | `stacks/paperless-ngx/` | 8010 | none, container-only |
+| **mealie** | Recipe management, meal planning, and shopping lists | `stacks/mealie/` | 9000 | `127.0.0.1:8925` |
+| **seerr** | Media request and discovery management | `stacks/seer/` | 5055 | host network |
+| **homarr** | Dashboard for self-hosted services | `stacks/homarr/` | 7575 | `7576:7575` |
+| **bazarr** | Subtitle management for Radarr and Sonarr | `stacks/bazarr/` | 6767 | host network |
+| **ryot** | Media tracking and discovery | `stacks/ryot/` | 8000 | `127.0.0.1:8950` |
+| **scrob** | Movie and TV tracking with Trakt scrobbling | `stacks/scrob/` | 7330 | `127.0.0.1:8900` |
+| **pihole** | Network-wide ad blocking via DNS | `stacks/pihole/` | 8081, 53 | host network |
 
 `ryot`, `scrob`, and `pihole` are not included in the root `docker-compose.yml`, so they do not start on deploy. See [Reverse Proxy with Caddy](#reverse-proxy-with-caddy).
 
@@ -31,18 +30,23 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 5. Configure domains via the **Domains** tab for each service
 6. Click **Deploy**
 
-> Data persists in `../files/` outside the repo, safe from redeploys. Media mounts (`/srv/media`) are expected to exist on the host. Use the Dokploy **Volume Backups** feature for automated backups of named volumes (`postgres_data`, `redis_data`, `yamtrack_data`, `paperless_*`, `seer-data`, `homarr-data`, `bazarr-config`).
+> **Bind mount paths** — `../files/` in a stack file resolves to `stacks/files/`, inside this repository. Each included Compose file resolves relative paths against its own directory, not the root, so `stacks/paperless-ngx/` plus `../files/` gives `stacks/files/`. This is intentional: the path is stable across redeploys and does not depend on where the repository is cloned.
+>
+> `stacks/files/` is gitignored, so consumed documents and exports cannot be committed by accident. Back it up separately from the named volumes.
+>
+> Named volumes: use the Dokploy **Volume Backups** feature for `postgres_data`, `redis_data`, `paperless_data`, `paperless_media`, `seer-data`, `homarr-data`, `bazarr-config`, and `scrob-data`. External media mounts are expected to exist on the Docker host, either at `/srv/media` or at `/mnt/d/Entertainment` when Dokploy runs inside WSL2.
 
 ## Bazarr Setup
 
 Bazarr uses host networking so it can connect to the host-installed Sonarr and Radarr services through `localhost`. It is available directly at `http://<host-ip>:6767` and is not routed through Dokploy's network proxy.
 
-The stack mounts these Windows host media directories read/write:
+The stack mounts these media directories read/write, using the WSL view of the
+Windows `D:` drive because the Docker daemon runs inside WSL2:
 
-- `D:\Entertainment\Movies` → `/movies`
-- `D:\Entertainment\TV` → `/tv`
+- `/mnt/d/Entertainment/Movies` → `/movies`
+- `/mnt/d/Entertainment/TV` → `/tv`
 
-The `D:\Entertainment\Import` directory is intentionally not mounted.
+The `Import` directory is intentionally not mounted. Bazarr should only touch the final libraries.
 
 After deployment, open `http://<host-ip>:6767` and configure:
 
@@ -52,7 +56,7 @@ After deployment, open `http://<host-ip>:6767` and configure:
 4. Add a Radarr path mapping from `D:\Entertainment\Movies` to `/movies`.
 5. Configure subtitle languages and providers, then enable automatic searches.
 
-Docker Desktop must have permission to access the `D:` drive. The container paths `/movies` and `/tv` are the paths to use when configuring Bazarr. Since Sonarr and Radarr run on Windows, their API responses use `D:\Entertainment\...` paths and require the mappings above.
+The path mappings are required because Sonarr and Radarr run on Windows and report `D:\Entertainment\...` in their API responses, while Bazarr sees the same files at `/tv` and `/movies`. The container paths are what you use when configuring Bazarr itself.
 
 The Bazarr image is pinned through `BAZARR_VERSION`. Update that value deliberately when upgrading rather than tracking `latest`. Restrict access to port `6767` with the host firewall or an authenticated internal reverse proxy.
 
@@ -118,10 +122,14 @@ Homarr has read-only access to `/var/run/docker.sock` for Docker integration. Th
 
 ### Dokploy
 - **`container_name` + `hostname`** — set on every service for predictable DNS and container naming.
-- **Network** — always use `dokploy-network` (external: true). Never custom networks.
-- **Ports** — container-only (e.g. `- 8000`), no host binding. Dokploy/Traefik routes via the network.
+- **Network** — `dokploy-network` (external: true) is the default for every service. Exceptions are the host-network stacks (`seerr`, `bazarr`, `pihole`), which must reach host-installed apps, and the `internal` network declared by `yamtrack`, `mealie`, `ryot`, and `scrob` alongside `dokploy-network`.
+- **Ports** — three patterns are in use, and the table above shows which applies to each service:
+  - **Container-only** (`- 8000`) is the default. Dokploy/Traefik routes to the service over `dokploy-network`, so no host port is published.
+  - **Loopback-only** (`- "127.0.0.1:8800:8000"`) publishes a host port bound to `127.0.0.1` for local-only debugging. It is not reachable from the LAN. Note the host port usually differs from the container port.
+  - **Host network** (`network_mode: host`) is required for services that must reach host-installed apps such as Jellyfin, Sonarr, and Radarr through `127.0.0.1`, and for Pi-hole's DNS on port 53. These services cannot join `dokploy-network`, so Dokploy cannot route to them by name and they are reached on the host port directly.
+- **Host port map** — loopback `8800`, `8900`, `8925`, `8950`; published `7576`; host-network `5055`, `6767`, `8081`, `53`. Port `7575` is reserved by Dokploy's nginx, and `80`/`443` are owned by the reverse proxy. No two stacks claim the same host port.
 - **Env vars** — pass directly via `environment:` blocks. Use `${VAR:?err}` for required vars, `${VAR:-default}` for optional. No `env_file` — vars come from the environment (Dokploy UI / shell).
-- **Bind mounts** — use `../files/` paths (not `./`, not absolute). Absolute paths get cleaned on redeploy.
+- **Bind mounts** — two kinds. Config and app data the repo owns use `../files/`, which resolves to `stacks/files/`. External media uses an absolute host path, because it lives outside the repo and cannot be repo-relative.
 - **Resource limits** — always set `deploy.resources.limits.memory`.
 - **Logging** — always use json-file driver with `max-size: 10m` / `max-file: 3`.
 
@@ -157,12 +165,13 @@ docker compose -f stacks/homarr/docker-compose.yml up -d
 ## Reverse Proxy with Caddy
 
 Dokploy already terminates TLS through Traefik using the **Domains** tab. The
-`Caddyfile` files are for the alternative case where a standalone Caddy
-instance owns the hostname instead.
+root `Caddyfile` is for the alternative case where a standalone Caddy instance
+owns the hostname instead. It is a single consolidated file covering every
+proxied service, not one file per stack.
 
 Only the trackers, Mealie, and Paperless-ngx are proxied. Everything else in
-this repository is an internal service reached over the LAN, and has no
-Caddyfile:
+this repository is an internal service reached over the LAN, and is deliberately
+absent from the Caddyfile:
 
 | Service | Domain | Upstream | In root compose |
 |---------|--------|----------|-----------------|
@@ -172,12 +181,11 @@ Caddyfile:
 | mealie | `mealie.munywele.co.ke` | `mealie:9000` | yes |
 | paperless | `paperless.munywele.co.ke` | `paperless:8010` | yes |
 
-Reached over the LAN only, with no Caddyfile:
+Reached over the LAN only, not proxied:
 
 | Service | Address |
 |---------|---------|
 | jellystat | `http://<host-ip>:3000` |
-| navidrome | `http://<host-ip>:4533` |
 | homarr | `http://<host-ip>:7576` |
 | seerr | `http://<host-ip>:5055` |
 | bazarr | `http://<host-ip>:6767` |

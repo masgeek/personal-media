@@ -14,7 +14,7 @@ Media tracking and discovery. Consumes Radarr, Sonarr, and Plex libraries.
 
 ## Reverse Proxy
 
-`Caddyfile` in this directory proxies `ryot.munywele.co.ke` to `ryot:8000`. Caddy must be attached to `dokploy-network`.
+The consolidated `Caddyfile` at the repository root proxies `ryot.munywele.co.ke` to `ryot:8000`. Caddy must be attached to `dokploy-network` to resolve the `ryot` service name.
 
 ## Required Environment
 

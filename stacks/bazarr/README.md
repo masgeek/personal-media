@@ -24,12 +24,14 @@ Bazarr is an internal service and has no reverse proxy example. Reach it on the 
 | Host path | Container path | Mode |
 |-----------|----------------|------|
 | `bazarr-config` (named volume) | `/config` | read/write |
-| `D:\Entertainment\Movies` | `/movies` | read/write |
-| `D:\Entertainment\TV` | `/tv` | read/write |
+| `/mnt/d/Entertainment/Movies` | `/movies` | read/write |
+| `/mnt/d/Entertainment/TV` | `/tv` | read/write |
 
-`D:\Entertainment\Import` is intentionally not mounted. Bazarr should only touch the final libraries.
+`/mnt/d/Entertainment/Import` is intentionally not mounted. Bazarr should only touch the final libraries.
 
-These bind sources are Windows paths and require Docker Desktop with file sharing for the `D:` drive. On a Linux Docker host, use Linux paths such as `/mnt/media/Movies` instead. The Docker daemon cannot resolve `D:\Entertainment` on Linux.
+These bind sources are absolute host paths, because the media lives outside the repository. `/mnt/d/Entertainment` is the WSL view of the Windows `D:` drive, which is what the Docker daemon sees when Dokploy runs inside WSL2.
+
+If Docker instead runs on a Linux host, change these to Linux media paths such as `/mnt/media/Movies`. The Docker daemon cannot resolve a Windows `D:\...` path on Linux.
 
 ## First Run
 
