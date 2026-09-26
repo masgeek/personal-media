@@ -16,6 +16,11 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 | **seerr** | Media request and discovery management | `stacks/seer/` | 5055 | `/` |
 | **homarr** | Dashboard for self-hosted services | `stacks/homarr/` | 7576 | `/` |
 | **bazarr** | Subtitle management for Radarr and Sonarr | `stacks/bazarr/` | 6767 | `/` |
+| **ryot** | Media tracking and discovery | `stacks/ryot/` | 8000 | `/` |
+| **scrob** | Music scrobbling with Last.fm | `stacks/scrob/` | 7330 | `/` |
+| **pihole** | Network-wide ad blocking via DNS | `stacks/pihole/` | 8081 | `/admin` |
+
+`ryot`, `scrob`, and `pihole` are not included in the root `docker-compose.yml`, so they do not start on deploy. See [Reverse Proxy with Caddy](#reverse-proxy-with-caddy).
 
 ## Deploy on Dokploy
 
@@ -145,8 +150,84 @@ Seek confirmation before adding a new service. Propose:
 ## Deploy a Single Stack
 
 ```bash
-docker compose -f stacks/core.yml -f stacks/tracking.yml up -d
-docker compose -f stacks/media-servers.yml up -d
-docker compose -f stacks/documents.yml up -d
-docker compose -f stacks/management.yml up -d
+docker compose -f stacks/bazarr/docker-compose.yml up -d
+docker compose -f stacks/homarr/docker-compose.yml up -d
 ```
+
+## Reverse Proxy with Caddy
+
+Dokploy already terminates TLS through Traefik using the **Domains** tab. The
+`Caddyfile.example` files are for the alternative case where a standalone Caddy
+instance owns the hostname instead.
+
+Only the trackers, Mealie, and Paperless-ngx are proxied. Everything else in
+this repository is an internal service reached over the LAN, and has no
+Caddyfile:
+
+| Service | Domain | Upstream | In root compose |
+|---------|--------|----------|-----------------|
+| yamtrack | `yamtrack.munywele.co.ke` | `yamtrack:8000` | yes |
+| ryot | `ryot.munywele.co.ke` | `ryot:8000` | no |
+| scrob | `scrob.munywele.co.ke` | `scrob:7330` | no |
+| mealie | `mealie.munywele.co.ke` | `mealie:9000` | yes |
+| paperless | `paperless.munywele.co.ke` | `paperless:8010` | yes |
+
+Reached over the LAN only, with no Caddyfile:
+
+| Service | Address |
+|---------|---------|
+| jellystat | `http://<host-ip>:3000` |
+| navidrome | `http://<host-ip>:4533` |
+| homarr | `http://<host-ip>:7576` |
+| seerr | `http://<host-ip>:5055` |
+| bazarr | `http://<host-ip>:6767` |
+| pihole | `http://<host-ip>:8081` |
+
+`gluetun`, `postgres`, and `redis` have no HTTP interface at all. Postgres and
+redis are internal dependencies and should never be exposed over HTTP.
+
+Several of the LAN-only services have no built-in authentication, including
+jellystat, bazarr, and pihole. Restrict them with the host firewall.
+
+`ryot`, `scrob`, and `pihole` are tracked in git but are not listed in the root
+`docker-compose.yml`, so they do not start on a Dokploy deploy. Add the include
+line for each one you want running:
+
+```yaml
+- stacks/ryot/docker-compose.yml
+- stacks/scrob/docker-compose.yml
+- stacks/pihole/docker-compose.yml
+```
+
+All proxied services run on `dokploy-network`, so Caddy reaches them by
+service name and does not need the host gateway:
+
+```yaml
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    networks:
+      - dokploy-network
+    ports:
+      - 80:80
+      - 443:443
+      - 443:443/udp
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+```
+
+Each proxied stack documents its own endpoint, required environment, and
+first-run steps. Read that file before proxying the service, because two of them
+need configuration changes to work correctly behind a proxy:
+
+| Service | Required change |
+|---------|-----------------|
+| ryot | `FRONTEND_URL` must match the proxied hostname |
+| mealie | set `MEALIE__ALLOW_SIGNUP` to `false` after the first account exists |
+
+Do not configure a domain in both Dokploy and Caddy. Two proxies terminating
+TLS for the same hostname will fail, and the failure is not obvious from the
+service logs.
