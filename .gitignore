@@ -2,3 +2,6 @@
 config/
 cache/
 metadata/
+
+# Bind mount targets referenced as ../files/ from stack compose files
+stacks/files/
