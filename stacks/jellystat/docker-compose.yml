@@ -5,11 +5,11 @@ services:
     hostname: jellystat
     restart: unless-stopped
     environment:
-      POSTGRES_IP: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: ${POSTGRES_USER:-media}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?err}
-      POSTGRES_DB: ${POSTGRES_DB:-media}
+      POSTGRES_IP: ${DB_HOST:-postgres}
+      POSTGRES_PORT: ${DB_PORT:-5432}
+      POSTGRES_USER: ${DB_USERNAME:?err}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?err}
+      POSTGRES_DB: ${DB_DATABASE:-jellystat}
     ports:
       - 3000
     networks:
