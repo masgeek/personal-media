@@ -1,0 +1,23 @@
+services:
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    restart: unless-stopped
+    init: true
+    container_name: flaresolverr
+    hostname: flaresolverr
+    network_mode: host
+    environment:
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+      TZ: ${TZ:-Africa/Nairobi}
+      PORT: 8191
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8191/api/v1/settings/public || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
