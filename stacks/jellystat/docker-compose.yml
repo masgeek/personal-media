@@ -10,6 +10,7 @@ services:
       POSTGRES_USER: ${DB_USERNAME:?err}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?err}
       POSTGRES_DB: ${DB_DATABASE:-jellystat}
+      JWT_SECRET: ${JWT_SECRET:?err}
     ports:
       - 3000
     networks:
