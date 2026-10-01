@@ -12,7 +12,7 @@ services:
       POSTGRES_DB: ${DB_DATABASE:-jellystat}
       JWT_SECRET: ${JWT_SECRET:?err}
     ports:
-      - 3000
+      - "127.0.0.1:8930:3000"
     networks:
       - dokploy-network
     deploy:
