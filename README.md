@@ -15,6 +15,7 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 | **seerr** | Media request and discovery management | `stacks/seer/` | 5055 | host network |
 | **homarr** | Dashboard for self-hosted services | `stacks/homarr/` | 7575 | `7576:7575` |
 | **bazarr** | Subtitle management for Radarr and Sonarr | `stacks/bazarr/` | 6767 | host network |
+| **tdarr** | Transcode automation for Radarr and Sonarr libraries | `stacks/tdarr/` | 8265 | host network |
 | **ryot** | Media tracking and discovery | `stacks/ryot/` | 8000 | `127.0.0.1:8950` |
 | **scrob** | Movie and TV tracking with Trakt scrobbling | `stacks/scrob/` | 7330 | `127.0.0.1:8900` |
 | **pihole** | Network-wide ad blocking via DNS | `stacks/pihole/` | 8081, 53 | host network |
@@ -189,6 +190,7 @@ Reached over the LAN only, not proxied:
 | homarr | `http://<host-ip>:7576` |
 | seerr | `http://<host-ip>:5055` |
 | bazarr | `http://<host-ip>:6767` |
+| tdarr | `http://<host-ip>:8265` |
 | pihole | `http://<host-ip>:8081` |
 
 `gluetun`, `postgres`, and `redis` have no HTTP interface at all. Postgres and
