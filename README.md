@@ -15,7 +15,7 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 | **seerr** | Media request and discovery management | `stacks/seer/` | 5055 | host network |
 | **homarr** | Dashboard for self-hosted services | `stacks/homarr/` | 7575 | `7576:7575` |
 | **bazarr** | Subtitle management for Radarr and Sonarr | `stacks/bazarr/` | 6767 | host network |
-| **tdarr** | Transcode automation for Radarr and Sonarr libraries | `stacks/tdarr/` | 8265 | host network |
+| **transcode** | Library video optimisation and conversion | `stacks/transcode/` | 8888 | `8888:8888` |
 | **ryot** | Media tracking and discovery | `stacks/ryot/` | 8000 | `127.0.0.1:8950` |
 | **scrob** | Movie and TV tracking with Trakt scrobbling | `stacks/scrob/` | 7330 | `127.0.0.1:8900` |
 | **pihole** | Network-wide ad blocking via DNS | `stacks/pihole/` | 8081, 53 | host network |
@@ -35,7 +35,7 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 >
 > `stacks/files/` is gitignored, so consumed documents and exports cannot be committed by accident. Back it up separately from the named volumes.
 >
-> Named volumes: use the Dokploy **Volume Backups** feature for `postgres_data`, `redis_data`, `paperless_data`, `paperless_media`, `seer-data`, `homarr-data`, `bazarr-config`, and `scrob-data`. External media mounts are expected to exist on the Docker host, either at `/srv/media` or at `/mnt/d/Entertainment` when Dokploy runs inside WSL2.
+> Named volumes: use the Dokploy **Volume Backups** feature for `postgres_data`, `redis_data`, `paperless_data`, `paperless_media`, `seer-data`, `homarr-data`, `bazarr-config`, and `scrob-data`. The `transcode` stack keeps its settings in the `stacks/files/` bind mounts instead, so back up `stacks/files/` directly. External media mounts are expected to exist on the Docker host, either at `/srv/media` or at `/mnt/d/Entertainment` when Dokploy runs inside WSL2.
 
 ## Bazarr Setup
 
@@ -128,7 +128,7 @@ Homarr has read-only access to `/var/run/docker.sock` for Docker integration. Th
   - **Container-only** (`- 8000`) is the default. Dokploy/Traefik routes to the service over `dokploy-network`, so no host port is published.
   - **Loopback-only** (`- "127.0.0.1:8800:8000"`) publishes a host port bound to `127.0.0.1` for local-only debugging. It is not reachable from the LAN. Note the host port usually differs from the container port.
   - **Host network** (`network_mode: host`) is required for services that must reach host-installed apps such as Jellyfin, Sonarr, and Radarr through `127.0.0.1`, and for Pi-hole's DNS on port 53. These services cannot join `dokploy-network`, so Dokploy cannot route to them by name and they are reached on the host port directly.
-- **Host port map** — loopback `8800`, `8900`, `8925`, `8950`; published `7576`; host-network `5055`, `6767`, `8081`, `53`. Port `7575` is reserved by Dokploy's nginx, and `80`/`443` are owned by the reverse proxy. No two stacks claim the same host port.
+- **Host port map** — loopback `8800`, `8900`, `8925`, `8950`; published `7576`, `8888`; host-network `5055`, `6767`, `8081`, `53`. Port `7575` is reserved by Dokploy's nginx, and `80`/`443` are owned by the reverse proxy. No two stacks claim the same host port.
 - **Env vars** — pass directly via `environment:` blocks. Use `${VAR:?err}` for required vars, `${VAR:-default}` for optional. No `env_file` — vars come from the environment (Dokploy UI / shell).
 - **Bind mounts** — two kinds. Config and app data the repo owns use `../files/`, which resolves to `stacks/files/`. External media uses an absolute host path, because it lives outside the repo and cannot be repo-relative.
 - **Resource limits** — always set `deploy.resources.limits.memory`.
@@ -190,7 +190,7 @@ Reached over the LAN only, not proxied:
 | homarr | `http://<host-ip>:7576` |
 | seerr | `http://<host-ip>:5055` |
 | bazarr | `http://<host-ip>:6767` |
-| tdarr | `http://<host-ip>:8265` |
+| transcode | `http://<host-ip>:8888` |
 | pihole | `http://<host-ip>:8081` |
 
 `gluetun`, `postgres`, and `redis` have no HTTP interface at all. Postgres and

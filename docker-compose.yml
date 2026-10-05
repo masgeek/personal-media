@@ -8,4 +8,4 @@ include:
   - stacks/seer/docker-compose.yml
   - stacks/homarr/docker-compose.yml
   - stacks/bazarr/docker-compose.yml
-  - stacks/tdarr/docker-compose.yml
+  - stacks/transcode/docker-compose.yml
