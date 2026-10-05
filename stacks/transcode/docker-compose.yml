@@ -6,6 +6,9 @@ services:
     restart: unless-stopped
     networks:
       - dokploy-network
+    extra_hosts:
+      # Lets FileFlows reach Jellyfin and Radarr/Sonarr on the Windows host.
+      - "host.docker.internal:host-gateway"
     ports:
       - "19200:5000"
     environment:

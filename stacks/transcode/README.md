@@ -182,6 +182,46 @@ Other published tags:
 Use a `modded` variant only if the container cannot reach the internet to fetch
 DockerMods plugins.
 
+## Jellyfin Integration
+
+FileFlows ships a **Jellyfin Updater** flow node. It sends a request to Jellyfin
+to refresh its library after a conversion, so Jellyfin picks up the new file
+without waiting for a scheduled scan.
+
+Install it under **Settings → Extensions → Plugins**, then configure it once
+under the plugin's settings page so individual flows do not need it repeated:
+
+| Setting | Value |
+|---------|-------|
+| Server | `http://host.docker.internal:8096` |
+| Access Token | Jellyfin API key, from Dashboard → Advanced → API Keys |
+| Mapping | see below |
+
+**The mapping is required.** FileFlows sees the media at `/library/Movies`, but
+Jellyfin has it registered as `D:\Entertainment\Movies`. Without a mapping,
+Jellyfin cannot match the converted file to its library entry.
+
+| FileFlows | Jellyfin |
+|-----------|----------|
+| `/library/Movies` | `D:\Entertainment\Movies` |
+| `/library/TV` | `D:\Entertainment\TV` |
+
+### Reaching Jellyfin
+
+Jellyfin runs natively on the Windows host, so `127.0.0.1` inside the container
+refers to the container itself, not Jellyfin. The stack maps
+`host.docker.internal` to the Docker host gateway, which is why the plugin
+settings use that hostname.
+
+Verify it resolves before configuring the plugin:
+
+```bash
+docker exec transcode curl -s http://host.docker.internal:8096/System/Info/Public
+```
+
+A JSON response confirms the path works. If it fails, Jellyfin may be bound to
+`127.0.0.1` only, in which case it must listen on the host LAN interface.
+
 ## Docker Siblings
 
 Mounting `/var/run/docker.sock` enables FileFlows' Docker Siblings feature,
