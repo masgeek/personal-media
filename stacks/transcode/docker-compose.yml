@@ -24,9 +24,11 @@ services:
       # NVIDIA_VISIBLE_DEVICES: all
 
     volumes:
-      # Settings, flows, and library configuration
-      - ../files/transcode/config:/app/Data
-      # Temporary conversion files. Keep this on local SSD if possible.
+      # Settings, flows, and library configuration. Named volume so it survives
+      # a repository re-clone, which would clear stacks/files/.
+      - transcode-data:/app/Data
+      # Temporary conversion files. Disposable, so a bind mount is fine. Keep
+      # this on local SSD rather than the media drive.
       - ../files/transcode/cache:/temp
       - "/mnt/d/Entertainment/Movies:/library/Movies"
       - "/mnt/d/Entertainment/TV:/library/TV"
@@ -49,6 +51,10 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+volumes:
+  transcode-data:
+    name: transcode-data
 
 networks:
   dokploy-network:

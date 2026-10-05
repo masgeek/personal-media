@@ -43,17 +43,25 @@ configuration work in files.
 
 | Host path | Container path | Purpose |
 |-----------|----------------|---------|
-| `../files/transcode/config` | `/app/Data` | settings, flows, library configuration |
+| `transcode-data` (named volume) | `/app/Data` | settings, flows, library configuration |
 | `../files/transcode/cache` | `/temp` | temporary conversion files |
 | `/mnt/d/Entertainment/Movies` | `/library/Movies` | read/write, converts in place |
 | `/mnt/d/Entertainment/TV` | `/library/TV` | read/write, converts in place |
 
-All `../files/` paths resolve to `stacks/files/`, consistent with the rest of the
-repository. They are bind mounts rather than named volumes so flows and settings
-are directly readable and editable on the host.
+Application state lives in the named volume `transcode-data` rather than a bind
+mount. This matters because `../files/` resolves *inside* the repository, and
+Dokploy deploys from its own clone of it. A re-clone or a `git clean` would wipe
+anything under `stacks/files/`, so state kept there is not durable. Named volumes
+survive that and are covered by Dokploy Volume Backups.
 
-Media mounts are read/write on purpose. FileFlows converts into `/temp` and then
-replaces the original file.
+The transcode cache stays a bind mount because it holds only in-progress files
+that are disposable by definition.
+
+To inspect or export state, copy it out of the volume:
+
+```bash
+docker cp transcode:/app/Data ./transcode-data-backup
+```
 
 `/mnt/d/Entertainment` is the WSL view of the Windows `D:` drive, which is what
 the Docker daemon sees when Dokploy runs inside WSL2.
@@ -264,6 +272,19 @@ take longer without reducing the total work done.
 
 ## Volumes to Back Up
 
-Back up `stacks/files/transcode/config`, which holds flows, settings, and library
-configuration. The cache holds only in-progress files and does not need backing
-up.
+Back up the `transcode-data` named volume with Dokploy Volume Backups. It holds
+flows, settings, and library configuration.
+
+To back it up manually:
+
+```bash
+docker run --rm -v transcode-data:/src:ro -v "$PWD":/backup \
+  revenz/fileflows:stable \
+  sh -c "tar czf /backup/transcode-data.tar.gz -C /src ."
+```
+
+Note the `--entrypoint sh`: the image's default entrypoint is the FileFlows
+server, so without it the shell command is passed to the server as arguments and
+it starts normally while ignoring what you asked for.
+
+The cache holds only in-progress files and does not need backing up.

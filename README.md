@@ -35,7 +35,7 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 >
 > `stacks/files/` is gitignored, so consumed documents and exports cannot be committed by accident. Back it up separately from the named volumes.
 >
-> Named volumes: use the Dokploy **Volume Backups** feature for `postgres_data`, `redis_data`, `paperless_data`, `paperless_media`, `seer-data`, `homarr-data`, `bazarr-config`, and `scrob-data`. The `transcode` stack keeps its settings in the `stacks/files/` bind mounts instead, so back up `stacks/files/` directly. External media mounts are expected to exist on the Docker host, either at `/srv/media` or at `/mnt/d/Entertainment` when Dokploy runs inside WSL2.
+> Named volumes: use the Dokploy **Volume Backups** feature for `postgres_data`, `redis_data`, `paperless_data`, `paperless_media`, `seer-data`, `homarr-data`, `bazarr-config`, `scrob-data`, and `transcode-data`. Application state is kept in named volumes rather than `stacks/files/`, because Dokploy deploys from its own clone of the repository and `stacks/files/` would be wiped by a re-clone. The `stacks/files/` bind mounts are limited to disposable or consume/export directories. External media mounts are expected to exist on the Docker host, either at `/srv/media` or at `/mnt/d/Entertainment` when Dokploy runs inside WSL2.
 
 ## Bazarr Setup
 
