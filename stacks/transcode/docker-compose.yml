@@ -15,7 +15,8 @@ services:
       PUID: ${TRANSCODE_PUID:-1000}
       PGID: ${TRANSCODE_PGID:-1000}
       TZ: ${TZ:-UTC}
-
+    devices:
+      - /dev/dri:/dev/dri
       # GPU passthrough is disabled. To enable NVIDIA transcoding later, install
       # the NVIDIA container toolkit in WSL2, then uncomment the two lines below
       # and the reservations block under deploy. Full steps are in README.md.
