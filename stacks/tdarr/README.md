@@ -96,26 +96,79 @@ or Tdarr will overwrite the file on start.
 
 ## Hardware Transcoding
 
-GPU transcoding is enabled in the compose file through an NVIDIA device
-reservation, alongside `NVIDIA_DRIVER_CAPABILITIES=all` and
-`NVIDIA_VISIBLE_DEVICES=all`.
+**Current state: CPU only.** GPU passthrough is commented out in the compose
+file because the NVIDIA container toolkit is not installed in the WSL2
+distribution running Dokploy. See "Enabling NVIDIA Later" below.
 
-Verify the GPU is visible to the container before configuring any plugins:
+CPU transcoding works out of the box with the bundled FFmpeg 7 and HandBrake.
+Set the transcode actions in Tdarr to use a software encoder such as `libx265`,
+and start with a single CPU worker.
+
+Your RTX 4050's NVENC encoder is substantially faster than software encoding,
+so enabling the GPU is worth doing when convenient.
+
+## Enabling NVIDIA Later
+
+The GPU is already visible to WSL2 itself. Confirm that first:
+
+```bash
+nvidia-smi -L
+```
+
+If that lists the card, the remaining problem is only that Docker cannot pass
+the device through to containers. Install the NVIDIA container toolkit inside
+the WSL distribution that runs Dokploy:
+
+```bash
+curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
+  | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+
+curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+  | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
+  | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+
+sudo apt-get update
+sudo apt-get install -y nvidia-container-toolkit
+sudo nvidia-ctk runtime configure --runtime=docker
+sudo systemctl restart docker
+```
+
+That last command restarts the Docker daemon, which stops every running
+container in the distribution, including Postgres and Redis. Redeploy afterwards.
+
+Verify the runtime is registered before changing the compose file:
+
+```bash
+docker info | grep -i -A2 runtimes
+```
+
+The output must include an `nvidia` runtime alongside `runc`. If it does not,
+the toolkit is not wired up and enabling the compose block will reproduce the
+error:
+
+```
+could not select device driver "nvidia" with capabilities: [[gpu]]
+```
+
+Once `nvidia` appears, uncomment these three places in `docker-compose.yml`:
+
+1. `NVIDIA_DRIVER_CAPABILITIES: all`
+2. `NVIDIA_VISIBLE_DEVICES: all`
+3. The `reservations.devices` block under `deploy.resources`
+
+Then confirm the GPU reaches the container:
 
 ```bash
 docker exec tdarr nvidia-smi
 ```
 
-If that command is missing or reports no devices, the NVIDIA container runtime
-is not registered with this Docker daemon. Under WSL2 this normally means the
-Windows NVIDIA driver is not installed, or the NVIDIA container toolkit is not
-installed in the WSL distribution running Dokploy.
+Finally, set the transcode actions to an NVENC encoder such as `hevc_nvenc` or
+`h264_nvenc` and create a GPU worker on the Tdarr tab.
 
-Once the GPU is visible, set the transcode actions in Tdarr to use NVENC rather
-than the CPU encoder, and create a GPU worker on the Tdarr tab.
+### Rolling Back
 
-The `/dev/dri` device mapping used for Intel and AMD is intentionally not set.
-It would fail to start on a machine without that device path.
+Re-comment the same three blocks and restart the container. No host changes need
+to be undone, since the toolkit installation is harmless while unused.
 
 ## First Run
 
