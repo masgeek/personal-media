@@ -34,9 +34,11 @@ services:
       maxLogSizeMB: "10"
       cronPluginUpdate: ""
 
-      # NVIDIA GPU passthrough
-      NVIDIA_DRIVER_CAPABILITIES: all
-      NVIDIA_VISIBLE_DEVICES: all
+      # GPU passthrough is disabled. To enable NVIDIA transcoding later, install
+      # the NVIDIA container toolkit in WSL2, then uncomment the two lines below
+      # and the reservations block under deploy. Full steps are in README.md.
+      # NVIDIA_DRIVER_CAPABILITIES: all
+      # NVIDIA_VISIBLE_DEVICES: all
 
     volumes:
       # Server database, samples, and plugins
@@ -54,11 +56,14 @@ services:
       resources:
         limits:
           memory: 2G
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+        # Uncomment together with the NVIDIA_* variables above once the NVIDIA
+        # container toolkit is installed. Without the toolkit registered as a
+        # Docker runtime, the daemon rejects this block and refuses to start.
+        # reservations:
+        #   devices:
+        #     - driver: nvidia
+        #       count: all
+        #       capabilities: [gpu]
 
     logging:
       driver: json-file
