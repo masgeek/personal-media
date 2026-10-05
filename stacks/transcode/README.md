@@ -4,9 +4,8 @@ Library optimisation: converts video files in place to a single uniform format.
 Runs [Tdarr](https://tdarr.io), which imports libraries directly from Radarr and
 Sonarr and applies plugin stacks to normalise codecs and containers.
 
-The stack is named generically so the backing application can be swapped later
-without renaming the service or the volume paths. See **Alternatives** at the
-bottom.
+The stack is named generically so the service name stays independent of the
+application it runs.
 
 Configuration follows the official
 [Run and Compose guide](https://docs.tdarr.io/docs/installation/docker/run-compose/).
