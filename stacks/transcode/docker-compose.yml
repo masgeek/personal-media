@@ -1,56 +1,31 @@
 services:
   transcode:
-    image: ghcr.io/haveagitgat/tdarr:${TDARR_VERSION:-2.94.02}
+    image: revenz/fileflows:${TRANSCODE_TAG:-stable}
     container_name: transcode
     hostname: transcode
     restart: unless-stopped
-
-    # Host networking so Tdarr can reach the Windows-hosted Radarr and Sonarr
-    # at 127.0.0.1. This means no ports block is needed: 8265 and 8266 are
-    # already bound on the host.
-    network_mode: host
-
+    networks:
+      - dokploy-network
+    ports:
+      - "19200:5000"
     environment:
+      PUID: ${TRANSCODE_PUID:-1000}
+      PGID: ${TRANSCODE_PGID:-1000}
       TZ: ${TZ:-UTC}
-      PUID: ${TDARR_PUID:-1000}
-      PGID: ${TDARR_PGID:-1000}
-      UMASK_SET: "002"
-
-      # Bind to all interfaces. Nodes connect outbound to serverPort, so no
-      # inbound node port is required.
-      serverIP: 0.0.0.0
-      serverPort: "8266"
-      webUIPort: "8265"
-
-      # internalNode runs a Tdarr Node inside the Server container. Without it
-      # the server starts but never transcodes anything.
-      internalNode: "true"
-      inContainer: "true"
-      nodeName: ${TDARR_NODE_NAME:-internal-node}
-      ffmpegVersion: "7"
-
-      auth: "false"
-      openBrowser: "false"
-      maxLogSizeMB: "10"
-      cronPluginUpdate: ""
 
       # GPU passthrough is disabled. To enable NVIDIA transcoding later, install
       # the NVIDIA container toolkit in WSL2, then uncomment the two lines below
       # and the reservations block under deploy. Full steps are in README.md.
-      # NVIDIA_DRIVER_CAPABILITIES: all
+      # NVIDIA_DRIVER_CAPABILITIES: compute,video,utility
       # NVIDIA_VISIBLE_DEVICES: all
 
     volumes:
-      # Server database, samples, and plugins
-      - ../files/transcode/server:/app/server
-      # Server and node JSON config. pathTranslators can only be set here,
-      # they have no environment variable equivalent.
-      - ../files/transcode/configs:/app/configs
-      - ../files/transcode/logs:/app/logs
-      # Working files during transcode. Keep this on local SSD if possible.
+      # Settings, flows, and library configuration
+      - ../files/transcode/config:/app/Data
+      # Temporary conversion files. Keep this on local SSD if possible.
       - ../files/transcode/cache:/temp
-      - "/mnt/d/Entertainment/Movies:/movies"
-      - "/mnt/d/Entertainment/TV:/tv"
+      - "/mnt/d/Entertainment/Movies:/library/Movies"
+      - "/mnt/d/Entertainment/TV:/library/TV"
 
     deploy:
       resources:
@@ -70,3 +45,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+networks:
+  dokploy-network:
+    external: true

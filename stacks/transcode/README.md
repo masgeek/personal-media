@@ -1,59 +1,59 @@
 # Transcode
 
-Library optimisation: converts video files in place to a single uniform format.
-Runs [Tdarr](https://tdarr.io), which imports libraries directly from Radarr and
-Sonarr and applies plugin stacks to normalise codecs and containers.
+Library optimisation: converts and reorganises video files in place using
+visual flows. Runs [FileFlows](https://fileflows.com), which points directly at
+the media directories.
 
 The stack is named generically so the service name stays independent of the
 application it runs.
-
-Configuration follows the official
-[Run and Compose guide](https://docs.tdarr.io/docs/installation/docker/run-compose/).
 
 ## Endpoint
 
 | Item | Value |
 |------|-------|
-| Web UI port | 8265 |
-| Server port | 8266, nodes connect outbound to this |
-| Network | `host` |
-| Reachable at | `http://<host-ip>:8265` |
+| Container port | 5000 |
+| Published host port | 19200 → 5000 |
+| Network | `dokploy-network` |
+| Upstream address | `transcode:5000` |
+| Reachable at | `http://<host-ip>:19200` |
 
-This is an internal service and is not in the root `Caddyfile`. It is reached on
-the host port directly. Do not expose it publicly.
+This is an internal service and is not in the root `Caddyfile`. Host port 19200
+is published so the UI is reachable from the LAN. Do not expose it publicly.
 
-Because host networking is used, there is no `ports` block. Ports 8265 and 8266
-are bound directly on the host.
+FileFlows defaults to 19200 on the host, which is why the mapping is
+`19200:5000`. Change the left-hand side to move the host port.
 
-## Why Host Networking
+## Why This Is Simpler Than the Alternatives
 
-Tdarr imports libraries from Radarr and Sonarr, which run directly on the
-Windows host. Host networking lets it reach them at `http://127.0.0.1:7878` and
-`http://127.0.0.1:8989`, which a bridge network cannot do.
+FileFlows is pointed straight at the media directories, so none of these apply:
 
-The tradeoff is that Tdarr is not attached to `dokploy-network`, so Dokploy
-cannot route to it by container name.
+- **No path translators.** Radarr and Sonarr are never queried, so their
+  Windows paths never enter the picture.
+- **No library import.** No API keys, no library type selection, no separate
+  Movies and TV library definitions.
+- **No node or worker to start.** The server image includes an internal agent,
+  so a single container is a complete installation.
+- **No plugin stack to write.** Flows are assembled from nodes in the UI and can
+  be imported as JSON.
+
+The trade-off is that initial setup is visual work in the browser rather than
+configuration work in files.
 
 ## Volumes
 
 | Host path | Container path | Purpose |
 |-----------|----------------|---------|
-| `../files/transcode/server` | `/app/server` | server database, samples, plugins |
-| `../files/transcode/configs` | `/app/configs` | `Tdarr_Server_Config.json` and `Tdarr_Node_Config.json` |
-| `../files/transcode/logs` | `/app/logs` | application logs |
-| `../files/transcode/cache` | `/temp` | working files during transcode |
-| `/mnt/d/Entertainment/Movies` | `/movies` | read/write, transcodes in place |
-| `/mnt/d/Entertainment/TV` | `/tv` | read/write, transcodes in place |
+| `../files/transcode/config` | `/app/Data` | settings, flows, library configuration |
+| `../files/transcode/cache` | `/temp` | temporary conversion files |
+| `/mnt/d/Entertainment/Movies` | `/library/Movies` | read/write, converts in place |
+| `/mnt/d/Entertainment/TV` | `/library/TV` | read/write, converts in place |
 
 All `../files/` paths resolve to `stacks/files/`, consistent with the rest of the
-repository. These are bind mounts rather than named volumes because
-`pathTranslators` can only be set by editing `Tdarr_Node_Config.json`, which is
-far easier when the file is reachable on the host.
+repository. They are bind mounts rather than named volumes so flows and settings
+are directly readable and editable on the host.
 
-Media mounts follow the same pattern as the `bazarr` stack: host media paths are
-mounted at simplified container paths rather than identical ones. Media mounts
-are read/write on purpose, because Tdarr rewrites files in place after
-transcoding into the cache directory and moving the result back.
+Media mounts are read/write on purpose. FileFlows converts into `/temp` and then
+replaces the original file.
 
 `/mnt/d/Entertainment` is the WSL view of the Windows `D:` drive, which is what
 the Docker daemon sees when Dokploy runs inside WSL2.
@@ -61,159 +61,40 @@ the Docker daemon sees when Dokploy runs inside WSL2.
 The cache holds full-size temporary files for every job. Keep
 `stacks/files/transcode/cache` on local SSD rather than the media drive.
 
-## Required Configuration
+## First Run
 
-These environment variables are set in the compose file and should not be
-removed:
+1. Open `http://<host-ip>:19200`.
+2. Under **Settings**, set the **Library Start Directory** to `/library/Movies`.
+   This is the first path FileFlows offers to browse. Everything else is reached
+   by moving up to `/library`.
+3. Go to **Libraries** and add `/library/Movies` and `/library/TV`. These are
+   container paths, not Windows host paths.
+4. Confirm the scan finds files. An empty result means the media mount did not
+   resolve; check with `docker exec transcode ls -ld /library/Movies /library/TV`.
+5. Build a flow: **Flows → Library Optimisation**, then assemble a transcode flow
+   from the video nodes. Start with a single encode node and no conditions.
+6. Assign the flow to a library, then run it on **one** file and confirm the
+   output plays in Jellyfin before enabling a schedule.
 
-| Variable | Why it matters |
-|----------|----------------|
-| `internalNode=true` | runs a Node inside the Server container. Without it the server starts but never transcodes anything |
-| `inContainer=true` | tells Tdarr it is containerised |
-| `serverIP=0.0.0.0` | required for nodes to reach the server |
-| `serverPort=8266` | node connection port |
-| `webUIPort=8265` | web UI port |
-| `ffmpegVersion=7` | bundled FFmpeg major version |
+## Converting Only New Files
 
-Optional: `TDARR_VERSION` (defaults to `2.94.02`), `TDARR_PUID`, `TDARR_PGID`,
-`TDARR_NODE_NAME`, and the root `TZ`.
+A FileFlows node watches for files added to a directory and can trigger a flow
+when that happens. Point a watcher node at `/mnt/d/Entertainment/Import` to
+convert incoming files before they are handed to Radarr or Sonarr.
 
-`openBrowser` is set to `false` because there is no browser in the container.
+`Import` is not mounted by default. Add it only if you want that behaviour:
 
-## Path Translators
-
-This is the step most likely to cause confusion, and it is mandatory. Tdarr
-imports library paths verbatim from Radarr and Sonarr, which report Windows
-paths like `D:\Entertainment\Movies\...`. Those paths do not exist inside the
-container, so every file fails to resolve and the queue stays empty with no
-error.
-
-`pathTranslators` has no environment variable equivalent and must be set in
-`stacks/files/transcode/configs/Tdarr_Node_Config.json`:
-
-```json
-"pathTranslators": [
-  { "server": "D:\\Entertainment\\Movies", "node": "/movies" },
-  { "server": "D:\\Entertainment\\TV", "node": "/tv" }
-]
+```yaml
+      - "/mnt/d/Entertainment/Import:/library/Import"
 ```
-
-`path-translators.example.json` in this directory holds the same block as a
-template, with the `server` values pre-filled for this layout.
-
-Backslashes in JSON must be escaped as `\\`. Restart the container afterwards,
-or Tdarr will overwrite the file on start.
-
-## Walkthrough: Adding Libraries and Transcoding
-
-Follow this order. Setting path translators first is not optional, because
-libraries imported before that resolve to zero files with no visible error.
-
-### 1. Preflight
-
-```bash
-docker exec transcode ls -ld /movies /tv
-```
-
-Both must exist. If empty, the media mounts did not resolve.
-
-Then open `http://<host-ip>:8265` and check the **Tdarr** tab. A node named
-`internal-node` must be listed. No node means `internalNode` is not set, and
-nothing will ever transcode.
-
-### 2. Set Path Translators
-
-```bash
-docker compose -f stacks/transcode/docker-compose.yml stop transcode
-```
-
-Edit `stacks/files/transcode/configs/Tdarr_Node_Config.json` using the block
-above, then:
-
-```bash
-docker compose -f stacks/transcode/docker-compose.yml start transcode
-```
-
-The container must be stopped while editing. Tdarr rewrites this file on start
-and overwrites changes made while running.
-
-### 3. Add Libraries
-
-Get the API keys from Radarr and Sonarr under Settings → General.
-
-In Tdarr, go to **Libraries → New Library**:
-
-| Field | Movies library | TV library |
-|-------|----------------|------------|
-| Library type | Radarr | Sonarr |
-| URL | `http://127.0.0.1:7878` | `http://127.0.0.1:8989` |
-| API key | Radarr's API key | Sonarr's API key |
-| Path | `/movies` | `/tv` |
-
-`127.0.0.1` is correct because host networking shares the host loopback
-interface. A bridge network would not reach the Windows-hosted services there.
-
-**Verify before continuing.** Open the library and confirm it lists real files.
-An empty library means the path translators did not apply, so return to step 2.
-
-### 4. Build a Plugin Stack
-
-Go to **Plugin Stacks → New**. A reasonable first stack for CPU transcoding:
-
-1. **Condition** — Video Codec is not `hevc`
-2. **Action** — Transcode, encoder `libx265`, preset `medium`
-
-Add a remux condition later if container normalisation is also wanted. Start
-with a single condition and action, since a complex stack is difficult to debug
-when it produces unexpected output.
-
-### 5. Start a Worker
-
-Go to the **Tdarr tab → New Worker**:
-
-| Setting | Value |
-|---------|-------|
-| Worker type | Transcode CPU |
-| Workers | `1` |
-| Start paused | No |
-
-Use one worker. Software transcoding saturates the host, so additional workers
-only divide the same cores without finishing sooner.
-
-### 6. Test on a Single File
-
-Assign the plugin stack to the library, then run it against **one** item and
-watch the log. Confirm the resulting file plays in Jellyfin before touching the
-whole library.
-
-### 7. Schedule
-
-Once a manual run is verified, set the library schedule and start a fresh
-library with the stack assigned.
-
-## Licensing
-
-Tdarr is proprietary, with a free tier that is sufficient for single-machine
-transcoding. The free tier includes the server, up to 5 nodes, plugin stacks and
-flows, CPU and GPU workers, health checks, and the community plugin catalogue.
-
-The paid tier ($4.99/month or $49.99/year) only adds Tdarr Relay, duplicate
-file finder, size explorer, extra statistics, node prioritisation,
-library-to-node assignment, node tags, unmapped nodes, and Discord
-notifications. None of those are needed to convert a library on one machine.
-
-The trade-off is that Tdarr is source-available rather than open source, so the
-core function depends on the vendor and the free tier's contents are not
-guaranteed to stay unchanged.
 
 ## Hardware Transcoding
 
 **Current state: CPU only.** GPU passthrough is commented out because the NVIDIA
 container toolkit is not installed in the WSL2 distribution running Dokploy.
 
-CPU transcoding works out of the bundled FFmpeg 7 and HandBrake. Set transcode
-actions to a software encoder such as `libx265`, and start with a single CPU
-worker.
+CPU transcoding works out of the bundled FFmpeg and ImageMagick. In your flow,
+set the video encoder to a software encoder such as `libx265`.
 
 Your RTX 4050's NVENC encoder is substantially faster than software encoding, so
 enabling the GPU is worth doing when convenient.
@@ -262,7 +143,7 @@ could not select device driver "nvidia" with capabilities: [[gpu]]
 
 Once `nvidia` appears, uncomment these three places in `docker-compose.yml`:
 
-1. `NVIDIA_DRIVER_CAPABILITIES: all`
+1. `NVIDIA_DRIVER_CAPABILITIES: compute,video,utility`
 2. `NVIDIA_VISIBLE_DEVICES: all`
 3. The `reservations.devices` block under `deploy.resources`
 
@@ -272,26 +153,63 @@ Then confirm the GPU reaches the container:
 docker exec transcode nvidia-smi
 ```
 
-Finally, set the transcode actions to an NVENC encoder such as `hevc_nvenc` or
-`h264_nvenc`, and create a GPU worker on the Tdarr tab.
+Finally, change the encoder in your flow to NVENC, for example `hevc_nvenc` or
+`h264_nvenc`.
+
+Note that FileFlows uses `compute,video,utility` capabilities, not `all`. Using
+`all` also works but grants more device access than needed.
 
 ### Rolling Back
 
 Re-comment the same three blocks and restart the container. No host changes need
 to be undone, since the toolkit installation is harmless while unused.
 
+## Image Tag
+
+`TRANSCODE_TAG` defaults to `stable`. FileFlows updates `latest` frequently, up
+to daily, and it can carry experimental changes. Monthly stable releases are the
+safer choice for unattended operation.
+
+Other published tags:
+
+| Tag | Contents |
+|-----|----------|
+| `stable` | monthly tested release, the default here |
+| `latest` | most recent, frequently updated |
+| `latest_modded` | bundles its own FFmpeg and ImageMagick |
+| `modded_latest` | as above for stable releases |
+
+Use a `modded` variant only if the container cannot reach the internet to fetch
+DockerMods plugins.
+
+## Docker Siblings
+
+Mounting `/var/run/docker.sock` enables FileFlows' Docker Siblings feature,
+which lets it start and stop containerised jobs on demand. Leave it unmounted
+unless you need it: a Docker socket mount grants broad control of the daemon,
+and FileFlows does not require it for local transcoding.
+
+```yaml
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+```
+
+If you enable it, `TempPathHost` must also be set so FileFlows can hand a host
+path to the sibling container.
+
 ## Security
 
-`auth` is set to `false`, so the Tdarr UI has no login. Anyone who can reach port
-8265 can start transcode jobs that rewrite your media files in place. Keep it on
-the LAN and restrict the port with the host firewall, or set `auth=true` and
-configure a secret key in the server config.
+FileFlows has no built-in user accounts. Anyone who can reach port 19200 can
+queue jobs that rewrite media files in place. Keep it on the LAN and restrict the
+port with the host firewall.
+
+An access token can be set under **Settings → Security**, but it governs
+connections from external agents rather than web UI access, so it is not a
+substitute for network restriction.
 
 ## Warnings
 
-Tdarr transcodes into the cache directory and then moves the result back over
-the original file. A wrong plugin stack destroys source data irreversibly. Back
-up `D:\Entertainment` before the first real run.
+FileFlows rewrites media files in place. A badly built flow destroys source data
+irreversibly. Back up `D:\Entertainment` before the first real run.
 
 CPU transcoding is slow. An encode that the RTX 4050 would finish in minutes can
 take most of an hour here.
@@ -301,11 +219,11 @@ take most of an hour here.
 Memory is limited to 2G, which is sufficient for FFmpeg at typical resolutions.
 Raise it for 4K remux work.
 
-No CPU limit is set on purpose, because throttling a transcode worker makes jobs
+No CPU limit is set on purpose, because throttling a conversion only makes it
 take longer without reducing the total work done.
 
 ## Volumes to Back Up
 
-Back up `stacks/files/transcode/`, particularly `server` and `configs`. Losing
-`configs` loses all plugin stacks and path translators, which is tedious to
-rebuild. The cache holds only in-progress files and does not need backing up.
+Back up `stacks/files/transcode/config`, which holds flows, settings, and library
+configuration. The cache holds only in-progress files and does not need backing
+up.
