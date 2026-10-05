@@ -1,24 +1,57 @@
 services:
   transcode:
-    image: ${TRANSCODE_IMAGE:-ghcr.io/unmanic/unmanic:latest}
+    image: ghcr.io/haveagitgat/tdarr:${TDARR_VERSION:-2.94.02}
     container_name: transcode
     hostname: transcode
     restart: unless-stopped
-    networks:
-      - dokploy-network
-    ports:
-      - "8888:8888"
+
+    # Host networking so Tdarr can reach the Windows-hosted Radarr and Sonarr
+    # at 127.0.0.1. This means no ports block is needed: 8265 and 8266 are
+    # already bound on the host.
+    network_mode: host
+
     environment:
-      PUID: ${TRANSCODE_PUID:-1000}
-      PGID: ${TRANSCODE_PGID:-1000}
       TZ: ${TZ:-UTC}
+      PUID: ${TDARR_PUID:-1000}
+      PGID: ${TDARR_PGID:-1000}
+      UMASK_SET: "002"
+
+      # Bind to all interfaces. Nodes connect outbound to serverPort, so no
+      # inbound node port is required.
+      serverIP: 0.0.0.0
+      serverPort: "8266"
+      webUIPort: "8265"
+
+      # internalNode runs a Tdarr Node inside the Server container. Without it
+      # the server starts but never transcodes anything.
+      internalNode: "true"
+      inContainer: "true"
+      nodeName: ${TDARR_NODE_NAME:-internal-node}
+      ffmpegVersion: "7"
+
+      auth: "false"
+      openBrowser: "false"
+      maxLogSizeMB: "10"
+      cronPluginUpdate: ""
+
+      # GPU passthrough is disabled. To enable NVIDIA transcoding later, install
+      # the NVIDIA container toolkit in WSL2, then uncomment the two lines below
+      # and the reservations block under deploy. Full steps are in README.md.
+      # NVIDIA_DRIVER_CAPABILITIES: all
+      # NVIDIA_VISIBLE_DEVICES: all
+
     volumes:
-      # Settings, presets, and installed plugins
-      - ../files/transcode/config:/config
-      # Temporary conversion files. Keep this on local SSD if possible.
-      - ../files/transcode/cache:/tmp/unmanic
-      - "/mnt/d/Entertainment/Movies:/library/Movies"
-      - "/mnt/d/Entertainment/TV:/library/TV"
+      # Server database, samples, and plugins
+      - ../files/transcode/server:/app/server
+      # Server and node JSON config. pathTranslators can only be set here,
+      # they have no environment variable equivalent.
+      - ../files/transcode/configs:/app/configs
+      - ../files/transcode/logs:/app/logs
+      # Working files during transcode. Keep this on local SSD if possible.
+      - ../files/transcode/cache:/temp
+      - "/mnt/d/Entertainment/Movies:/movies"
+      - "/mnt/d/Entertainment/TV:/tv"
+
     deploy:
       resources:
         limits:
@@ -32,18 +65,8 @@ services:
         #       count: all
         #       capabilities: [gpu]
 
-    # Hardware transcoding is disabled. To enable NVIDIA transcoding, install
-    # the NVIDIA container toolkit in WSL2, then uncomment the two lines below
-    # and the reservations block under deploy. Full steps are in README.md.
-    # NVIDIA_DRIVER_CAPABILITIES: all
-    # NVIDIA_VISIBLE_DEVICES: all
-
     logging:
       driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
-
-networks:
-  dokploy-network:
-    external: true
