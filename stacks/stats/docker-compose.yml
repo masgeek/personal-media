@@ -1,6 +1,6 @@
 services:
   jellyglance:
-    image: ghcr.io/nerdy-technician/jellyglance:${JELLYGLANCE_TAG:-latest}
+    image: ghcr.io/jellyglance/server:${JELLYGLANCE_TAG:-latest}
     container_name: jellyglance
     hostname: jellyglance
     restart: unless-stopped
