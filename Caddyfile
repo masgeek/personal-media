@@ -10,8 +10,9 @@
 # resolved by service name. Do not also set a Dokploy domain route for these
 # hostnames; two proxies terminating TLS for the same name will conflict.
 #
-# LAN-only services (jellystat, homarr, seerr, bazarr, pihole) are intentionally
-# absent. They have no Caddyfile and are reached on the host port directly.
+# LAN-only services (homarr, seerr, bazarr, pihole) are intentionally absent.
+# They have no Caddyfile and are reached on the host port directly. `stats` is
+# also absent: it is proxied by host Caddy in proxy-tool.
 
 # Shared hardening applied to every site below.
 (common) {

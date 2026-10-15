@@ -45,8 +45,8 @@ one-time history import.
 
 ## Overlap With Other Stacks
 
-This repository also runs `yamtrack` (media tracking) and `jellystat` (Jellyfin
-analytics). Scrob overlaps with Yamtrack on tracking and imports from the same
+This repository also runs `yamtrack` (media tracking) and `stats` (Plex/Jellyfin/Emby
+monitoring). Scrob overlaps with Yamtrack on tracking and imports from the same
 Jellyfin library. Pick one as the primary tracker or you will maintain the same
 watch history twice.
 

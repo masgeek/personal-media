@@ -1,0 +1,43 @@
+services:
+  stats:
+    image: ghcr.io/connorgallopo/tracearr:${TRACEARR_TAG:-supervised}
+    container_name: stats
+    hostname: stats
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Africa/Nairobi}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # Tracearr decides whether to trust X-Forwarded-* by hop count. One hop
+      # here: this container behind host Caddy.
+      TRUST_PROXY: ${TRUST_PROXY:-true}
+    ports:
+      # The container always listens on 3000 internally.
+      - "127.0.0.1:8930:3000"
+    volumes:
+      - stats_postgres:/var/lib/postgresql/data
+      - stats_redis:/var/lib/redis
+      - stats_data:/data
+    networks:
+      - dokploy-network
+    deploy:
+      resources:
+        limits:
+          # Below 3GB the OOM killer takes the container (exit 137). PostgreSQL,
+          # Redis and Node.js all run inside it.
+          memory: 3g
+        reservations:
+          memory: 1g
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  stats_postgres:
+  stats_redis:
+  stats_data:
+
+networks:
+  dokploy-network:
+    external: true

@@ -9,7 +9,7 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 | **postgres** | Database for all dependent services | `stacks/postgres/` | — | none, internal only |
 | **redis** | Cache/queue for yamtrack and paperless-ngx | `stacks/redis/` | — | none, internal only |
 | **yamtrack** | Personal media tracking (movies, shows, games, books) | `stacks/yamtrack/` | 8000 | `127.0.0.1:8800` |
-| **jellystat** | Viewing statistics and analytics for Jellyfin | `stacks/jellystat/` | 3000 | none, container-only |
+| **stats** | Plex/Jellyfin/Emby monitoring, analytics and account-sharing detection | `stacks/stats/` | 3000 | `127.0.0.1:8930` |
 | **paperless-ngx** | Document management system (scan, index, archive) | `stacks/paperless-ngx/` | 8010 | none, container-only |
 | **mealie** | Recipe management, meal planning, and shopping lists | `stacks/mealie/` | 9000 | `127.0.0.1:8925` |
 | **seerr** | Media request and discovery management | `stacks/seer/` | 5055 | host network |
@@ -186,7 +186,6 @@ Reached over the LAN only, not proxied:
 
 | Service | Address |
 |---------|---------|
-| jellystat | `http://<host-ip>:3000` |
 | homarr | `http://<host-ip>:7576` |
 | seerr | `http://<host-ip>:5055` |
 | bazarr | `http://<host-ip>:6767` |
@@ -197,7 +196,7 @@ Reached over the LAN only, not proxied:
 redis are internal dependencies and should never be exposed over HTTP.
 
 Several of the LAN-only services have no built-in authentication, including
-jellystat, bazarr, and pihole. Restrict them with the host firewall.
+homarr, bazarr, and pihole. Restrict them with the host firewall.
 
 `ryot`, `scrob`, and `pihole` are tracked in git but are not listed in the root
 `docker-compose.yml`, so they do not start on a Dokploy deploy. Add the include

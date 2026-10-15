@@ -156,7 +156,7 @@ Separate databases should be created for each application.
 Example:
 
 * yamtrack
-* jellystat
+* mealie
 * future applications
 
 Do **not** share a single database between applications.
@@ -269,23 +269,26 @@ Supports:
 
 ---
 
-## Jellystat
+## Stats (Tracearr)
 
 Purpose:
 
-* Jellyfin analytics.
+* Monitoring for Plex, Jellyfin and Emby from one dashboard.
 
 Uses:
 
-* Jellyfin API
-* PostgreSQL
+* Plex, Jellyfin and Emby APIs
+* TimescaleDB and Redis, bundled in the `supervised` container
 
 Provides:
 
-* Watch statistics
-* Viewing history
-* Library usage
-* Playback analytics
+* Live session tracking
+* Watch statistics and viewing history
+* Library usage and storage analytics
+* Transcode vs direct-play analysis
+* Account-sharing detection, trust scores and automations
+
+Exposed at https://stat.munywele.co.ke through host Caddy in proxy-tool.
 
 ---
 
@@ -322,7 +325,7 @@ Possible inputs:
 
 * Yamtrack ratings
 * Yamtrack watch history
-* Jellystat viewing history
+* Stats viewing history
 * Jellyfin metadata
 * Genres
 * Actors
@@ -364,7 +367,7 @@ Potential models:
 Jellyfin        Navidrome          Audiobookshelf
  │
  │
-Jellystat
+Stats (Tracearr)
  │
 Yamtrack
  │
