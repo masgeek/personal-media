@@ -269,24 +269,24 @@ Supports:
 
 ---
 
-## Stats (Tracearr)
+## Stats (JellyGlance)
 
 Purpose:
 
-* Monitoring for Plex, Jellyfin and Emby from one dashboard.
+* Admin dashboard for Jellyfin or Emby.
 
 Uses:
 
-* Plex, Jellyfin and Emby APIs
-* TimescaleDB and Redis, bundled in the `supervised` container
+* Jellyfin or Emby API
+* PostgreSQL, from the shared Postgres stack
 
 Provides:
 
-* Live session tracking
-* Watch statistics and viewing history
-* Library usage and storage analytics
-* Transcode vs direct-play analysis
-* Account-sharing detection, trust scores and automations
+* Live sessions with direct play and transcode detail
+* Library totals, recent additions and metadata gaps
+* Watch history and activity
+* Request, download and transcode queues
+* Server jobs, health checks, backups, imports and webhooks
 
 Exposed at https://stat.munywele.co.ke through host Caddy in proxy-tool.
 
@@ -367,7 +367,7 @@ Potential models:
 Jellyfin        Navidrome          Audiobookshelf
  │
  │
-Stats (Tracearr)
+Stats (JellyGlance)
  │
 Yamtrack
  │

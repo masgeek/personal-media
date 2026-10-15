@@ -1,32 +1,36 @@
 services:
-  stats:
-    image: ghcr.io/connorgallopo/tracearr:${TRACEARR_TAG:-supervised}
-    container_name: stats
-    hostname: stats
+  jellyglance:
+    image: ghcr.io/nerdy-technician/jellyglance:${JELLYGLANCE_TAG:-latest}
+    container_name: jellyglance
+    hostname: jellyglance
     restart: unless-stopped
     environment:
-      TZ: ${TZ:-Africa/Nairobi}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      # Tracearr decides whether to trust X-Forwarded-* by hop count. One hop
-      # here: this container behind host Caddy.
-      TRUST_PROXY: ${TRUST_PROXY:-true}
+      # Shared Postgres from stacks/postgres, on its own database. Plain
+      # PostgreSQL is enough; no extension is required.
+      POSTGRES_USER: ${DB_USERNAME:?DB_USERNAME is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      POSTGRES_IP: ${DB_HOST:-postgres}
+      POSTGRES_PORT: ${DB_PORT:-5432}
+      POSTGRES_DB: ${DB_DATABASE:-jellyglance}
+      # Changing this invalidates every existing login, so keep it stable.
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      TZ: ${TZ:-UTC}
+      JS_PUBLIC_URL: ${JELLYGLANCE_PUBLIC_URL:-https://stat.munywele.co.ke}
+      CONFIG_DIR: /app/config
+      BACKUP_DIR: /app/backups
     ports:
-      # The container always listens on 3000 internally.
       - "127.0.0.1:8930:3000"
     volumes:
-      - stats_postgres:/var/lib/postgresql/data
-      - stats_redis:/var/lib/redis
-      - stats_data:/data
+      - jellyglance_config:/app/config
+      - jellyglance_backups:/app/backups
     networks:
       - dokploy-network
     deploy:
       resources:
         limits:
-          # Below 3GB the OOM killer takes the container (exit 137). PostgreSQL,
-          # Redis and Node.js all run inside it.
-          memory: 3g
-        reservations:
           memory: 1g
+        reservations:
+          memory: 256m
     logging:
       driver: json-file
       options:
@@ -34,9 +38,8 @@ services:
         max-file: "3"
 
 volumes:
-  stats_postgres:
-  stats_redis:
-  stats_data:
+  jellyglance_config:
+  jellyglance_backups:
 
 networks:
   dokploy-network:

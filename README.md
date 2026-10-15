@@ -9,7 +9,7 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 | **postgres** | Database for all dependent services | `stacks/postgres/` | — | none, internal only |
 | **redis** | Cache/queue for yamtrack and paperless-ngx | `stacks/redis/` | — | none, internal only |
 | **yamtrack** | Personal media tracking (movies, shows, games, books) | `stacks/yamtrack/` | 8000 | `127.0.0.1:8800` |
-| **stats** | Plex/Jellyfin/Emby monitoring, analytics and account-sharing detection | `stacks/stats/` | 3000 | `127.0.0.1:8930` |
+| **stats** | JellyGlance admin dashboard for Jellyfin/Emby | `stacks/stats/` | 3000 | `127.0.0.1:8930` |
 | **paperless-ngx** | Document management system (scan, index, archive) | `stacks/paperless-ngx/` | 8010 | none, container-only |
 | **mealie** | Recipe management, meal planning, and shopping lists | `stacks/mealie/` | 9000 | `127.0.0.1:8925` |
 | **seerr** | Media request and discovery management | `stacks/seer/` | 5055 | host network |

@@ -1,95 +1,130 @@
-# Stats — media-server monitoring
+# Stats — JellyGlance
 
-Tracearr (https://github.com/connorgallopo/tracearr) monitors **Plex, Jellyfin and
-Emby** from one dashboard, with watch history, transcode analytics and account-sharing
-detection. Replaces `stacks/jellystat`, which covered only Jellyfin and Emby.
+[JellyGlance](https://jellyglance.com/) is a self-hosted dashboard that sits beside
+**Jellyfin or Emby** and gathers the daily admin checks into one interface: live
+sessions, libraries, users, requests, download queues, transcodes, invites,
+cleanup, server jobs, health checks, backups and webhooks.
 
-The stack is named for what it does, following the `yamtrack` convention.
+It replaces `stacks/jellystat`, which was Jellyfin-only analytics with no session
+view and no integrations.
+
+The stack is named for what it does, following the `yamtrack` convention. The
+container is `jellyglance` so `docker compose logs jellyglance` works.
 
 | | |
 | --- | --- |
 | Public URL | https://stat.munywele.co.ke |
 | Host binding | `127.0.0.1:8930` → container `3000` |
-| Database | Bundled — see below |
+| Database | `jellyglance` on the shared `stacks/postgres` |
+| Upstream | https://github.com/Nerdy-Technician/JellyGlance |
 
-Secrets are generated on first boot and persisted in the data volume, so there is
-nothing to put in `.env` for this stack.
+## What it needs
 
-## Why the supervised image
+Plain PostgreSQL 16 or newer, from this repository's `stacks/postgres`. **No
+extension, no TimescaleDB, no Redis.** That is the main reason it is lighter than
+what it replaced: a self-contained database container and a queue broker are not
+required, so it reuses what is already running.
 
-Tracearr requires **TimescaleDB**. Neither Postgres in this setup provides it:
-
-- this repository's `stacks/postgres` runs `postgres:18-alpine`
-- the shared `postgres` in proxy-tool runs `postgis/postgis:17-3.5`
-
-Installing the extension would mean adding `timescaledb` to `shared_preload_libraries`
-on a database server that other applications depend on, fighting pgbouncer's
-transaction pooling in the proxy-tool case, and retuning `max_locks_per_transaction`
-and `nofile` for one consumer's benefit.
-
-The `supervised` tag bundles the app, TimescaleDB and Redis into one container via
-supervisord, which isolates all of that.
-
-## Costs of this choice
-
-| | Supervised | Standard |
-| --- | --- | --- |
-| Containers | 1 | 3 |
-| PostgreSQL | 15 | 18 (TimescaleDB HA) |
-| Minimum RAM | **3GB** | ~1GB |
-| Secrets | Auto-generated | Manual `.env` |
-| Support status | Bare-metal only; upstream documents it as **unsupported on VMs and nested container environments** | Documented, supported |
-
-**Do not switch `TRACEARR_TAG` to `latest` expecting a smooth upgrade.** The
-on-disk format differs between PostgreSQL 15 and 18, and PostgreSQL will refuse to
-start against the old volume. Back up first:
+Create the database once, before the first start:
 
 ```bash
-docker exec stats node apps/server/scripts/backup.ts
-docker cp stats:/data/backup ./tracearr-backups
+docker exec postgres createdb --username "$POSTGRES_USER" --if-not-exists jellyglance
 ```
 
-Tracearr also has a built-in scheduler: Settings → Backup.
+The app does not create its own schema, so this step is not optional.
 
-## Deploy
+## Configuration
+
+Everything below is in the root `.env`, not a per-stack file, because that is how
+this repository handles credentials.
+
+| Variable | Purpose |
+| --- | --- |
+| `DB_HOST` | Defaults to `postgres`, the shared database container |
+| `DB_DATABASE` | Defaults to `jellyglance` |
+| `DB_USERNAME` / `DB_PASSWORD` | Database account. Required |
+| `JWT_SECRET` | Signs session tokens. **Changing it logs everyone out** |
+| `JELLYGLANCE_PUBLIC_URL` | Used when building webhook card-image URLs |
+| `JELLYGLANCE_TAG` | Image tag |
+
+Generate the signing secret with:
 
 ```bash
-docker compose up -d stats
-docker compose logs -f stats
+openssl rand -hex 32
 ```
 
-The first start initialises PostgreSQL, so allow a couple of minutes before the UI
-responds. Open https://stat.munywele.co.ke and create the first account, then
-connect a media server.
+A non-empty value in `.env.example` is a placeholder. Replace it before deploying.
+
+## First run
+
+1. Start the stack and open https://stat.munywele.co.ke
+2. Choose **Auto-detect**, **Jellyfin** or **Emby**, then give it the server URL
+3. Enter that server's API key so it can validate the connection and sync libraries
+4. Choose an admin access mode: local account, Jellyfin Quick Connect, Emby sign-in
+   or OIDC
+5. Let the first sync finish
+
+Everything else — integrations, tasks, webhooks, imports, newsletter — is configured
+inside the application under **Settings**, not in the environment.
+
+## Integrations worth connecting here
+
+This repository already runs most of what JellyGlance can display:
+
+| Integration | In this repository |
+| --- | --- |
+| Tdarr | `stacks/transcode` |
+| Bazarr | `stacks/bazarr` |
+| qBittorrent | native on the host |
+| Sonarr, Radarr, Lidarr, Readarr, Prowlarr | native on the host |
+| Jellyseerr / Overseerr | `stacks/seer` |
+
+`stacks/homarr` can also consume JellyGlance's widget endpoints, if the Homarr
+widget turns out to be more useful than JellyGlance's own.
+
+## Importing the old history
+
+JellyGlance imports **Jellystat backup files**, Tautulli backups and Trakt history
+under **Settings → Imports**, plus play-state sync from the media server. So the
+history from the retired stack is recoverable if it is wanted:
+
+```bash
+docker cp jellystat:/data ./jellystat-export   # before removing the old container
+```
+
+Take that copy first if it matters. The old stack is removed from this repository
+already, so the container may no longer exist to copy from.
 
 ## Routing
 
 This service is proxied by **host Caddy in proxy-tool**, not by this repository's
 Caddyfile, which does not carry the public media domains. The route lives at
 `config/caddy/snippets/domains/personal.caddy` in proxy-tool and sets
-`flush_interval -1`, because Tracearr pushes live sessions over SSE and Socket.IO
-and Caddy's default response buffering would delay events.
-
-`TRUST_PROXY=true` is set for the same reason: there is exactly one hop, this
-container behind host Caddy.
+`flush_interval -1`, because JellyGlance uses WebSockets for live session updates
+and Caddy's default response buffering would delay them.
 
 ## Volumes and backup
 
 | Volume | Contents |
 | --- | --- |
-| `stats_postgres` | The database. The only copy of session history. |
-| `stats_redis` | BullMQ job state. |
-| `stats_data` | Poster image cache, application data and `/data/backup`. |
+| `jellyglance_config` | Application configuration |
+| `jellyglance_backups` | Backup exports written by the built-in scheduler |
 
-This database is **not** in this repository's Postgres stack, so it is not covered
-by any dump of `postgres_data`. Back it up with Tracearr's own tooling, or add an
-explicit `pg_dump` job.
+The database lives in the shared `postgres_data` volume, so it is covered by
+whatever protects that volume. The two volumes here are not: copy them, or use
+**Settings → Backup**.
 
-## Cleaning up the old database
+## Upgrading
 
-The superseded stack used the `jellystat` database on `stacks/postgres`. It is not
-in the root compose file, so nothing creates it; drop it once you are sure you do
-not need the history:
+```bash
+docker compose pull jellyglance
+docker compose up -d jellyglance
+```
+
+## Cleaning up
+
+The retired stack used the `jellystat` database. It is in no include file, so
+nothing recreates it:
 
 ```bash
 docker exec postgres dropdb --username "$POSTGRES_USER" --if-exists jellystat
