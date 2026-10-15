@@ -38,12 +38,6 @@ track.munywele.co.ke {
 	reverse_proxy yamtrack:8000
 }
 
-# Media tracker. Requires FRONTEND_URL in the ryot env to match this hostname.
-ryot.munywele.co.ke {
-	import common
-	reverse_proxy ryot:8000
-}
-
 # Media tracker with Trakt scrobbling. Requires SERVER_URL in the scrob env to
 # match this hostname.
 scrob.munywele.co.ke {

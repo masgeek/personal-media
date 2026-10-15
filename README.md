@@ -16,11 +16,10 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 | **homarr** | Dashboard for self-hosted services | `stacks/homarr/` | 7575 | `7576:7575` |
 | **bazarr** | Subtitle management for Radarr and Sonarr | `stacks/bazarr/` | 6767 | host network |
 | **transcode** | Library video optimisation and conversion | `stacks/transcode/` | 5000 | `19200:5000` |
-| **ryot** | Media tracking and discovery | `stacks/ryot/` | 8000 | `127.0.0.1:8950` |
 | **scrob** | Movie and TV tracking with Trakt scrobbling | `stacks/scrob/` | 7330 | `127.0.0.1:8900` |
 | **pihole** | Network-wide ad blocking via DNS | `stacks/pihole/` | 8081, 53 | host network |
 
-`ryot`, `scrob`, and `pihole` are not included in the root `docker-compose.yml`, so they do not start on deploy. See [Reverse Proxy with Caddy](#reverse-proxy-with-caddy).
+`scrob` and `pihole` are not included in the root `docker-compose.yml`, so they do not start on deploy. See [Reverse Proxy with Caddy](#reverse-proxy-with-caddy).
 
 ## Deploy on Dokploy
 
@@ -123,7 +122,7 @@ Homarr has read-only access to `/var/run/docker.sock` for Docker integration. Th
 
 ### Dokploy
 - **`container_name` + `hostname`** — set on every service for predictable DNS and container naming.
-- **Network** — `dokploy-network` (external: true) is the default for every service. Exceptions are the host-network stacks (`seerr`, `bazarr`, `pihole`), which must reach host-installed apps, and the `internal` network declared by `yamtrack`, `mealie`, `ryot`, and `scrob` alongside `dokploy-network`.
+- **Network** — `dokploy-network` (external: true) is the default for every service. Exceptions are the host-network stacks (`seerr`, `bazarr`, `pihole`), which must reach host-installed apps, and the `internal` network declared by `yamtrack`, `mealie`, and `scrob` alongside `dokploy-network`.
 - **Ports** — three patterns are in use, and the table above shows which applies to each service:
   - **Container-only** (`- 8000`) is the default. Dokploy/Traefik routes to the service over `dokploy-network`, so no host port is published.
   - **Loopback-only** (`- "127.0.0.1:8800:8000"`) publishes a host port bound to `127.0.0.1` for local-only debugging. It is not reachable from the LAN. Note the host port usually differs from the container port.
@@ -177,7 +176,6 @@ absent from the Caddyfile:
 | Service | Domain | Upstream | In root compose |
 |---------|--------|----------|-----------------|
 | yamtrack | `track.munywele.co.ke` | `yamtrack:8000` | yes |
-| ryot | `ryot.munywele.co.ke` | `ryot:8000` | no |
 | scrob | `scrob.munywele.co.ke` | `scrob:7330` | no |
 | mealie | `mealie.munywele.co.ke` | `mealie:9000` | yes |
 | paperless | `paperless.munywele.co.ke` | `paperless:8010` | yes |
@@ -198,12 +196,11 @@ redis are internal dependencies and should never be exposed over HTTP.
 Several of the LAN-only services have no built-in authentication, including
 homarr, bazarr, and pihole. Restrict them with the host firewall.
 
-`ryot`, `scrob`, and `pihole` are tracked in git but are not listed in the root
+`scrob` and `pihole` are tracked in git but are not listed in the root
 `docker-compose.yml`, so they do not start on a Dokploy deploy. Add the include
 line for each one you want running:
 
 ```yaml
-- stacks/ryot/docker-compose.yml
 - stacks/scrob/docker-compose.yml
 - stacks/pihole/docker-compose.yml
 ```
@@ -235,7 +232,6 @@ need configuration changes to work correctly behind a proxy:
 | Service | Required change |
 |---------|-----------------|
 | paperless | set `PAPERLESS_URL` and `PAPERLESS_CSRF_TRUSTED_ORIGINS` to the public URL |
-| ryot | `FRONTEND_URL` must match the proxied hostname |
 | mealie | set `MEALIE__ALLOW_SIGNUP` to `false` after the first account exists |
 
 Do not configure a domain in both Dokploy and Caddy. Two proxies terminating
