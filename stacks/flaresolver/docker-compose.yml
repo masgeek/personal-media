@@ -1,6 +1,6 @@
 services:
   flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr:latest
+    image: ghcr.io/flaresolverr/flaresolverr:${FLARESOLVERR_VERSION:-latest}
     restart: unless-stopped
     init: true
     container_name: flaresolverr
