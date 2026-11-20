@@ -6,8 +6,8 @@ services:
     restart: unless-stopped
     network_mode: host
     environment:
-      PUID: ${BAZARR_PUID:-1000}
-      PGID: ${BAZARR_PGID:-1000}
+      PUID: 1000
+      PGID: 1000
       TZ: ${TZ:-UTC}
     volumes:
       - bazarr-config:/config
