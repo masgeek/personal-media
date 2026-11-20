@@ -28,7 +28,7 @@ services:
       # Temporary conversion files. Disposable, so a bind mount is fine. Keep
       # this on local SSD rather than the media drive.
       - ../files/transcode/cache:/temp
-      - "/mnt/d/Entertainment/Movies:/library/Movies"
+      - "/mnt/d/Entertainment/MOVIES:/library/Movies"
       - "/mnt/d/Entertainment/TV:/library/TV"
 
     deploy:
