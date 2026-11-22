@@ -25,7 +25,7 @@ Seerr is an internal service and has no reverse proxy example. Reach it on the L
 |----------|---------|---------|
 | `PORT` | 5055 | listen port on the host network |
 | `LOG_LEVEL` | `debug` | set to `info` or `warn` in production |
-| `TZ` | `Africa/Nairobi` | container timezone |
+| `TZ` | `UTC` | container timezone |
 
 `LOG_LEVEL` defaults to `debug`, which is verbose for normal operation.
 

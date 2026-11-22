@@ -9,7 +9,7 @@ services:
     network_mode: host
     environment:
       LOG_LEVEL: ${LOG_LEVEL:-debug}
-      TZ: ${TZ:-Africa/Nairobi}
+      TZ: ${TZ:-UTC}
       PORT: 5055
     volumes:
       - seer-data:/app/config
