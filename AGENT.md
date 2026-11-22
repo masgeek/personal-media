@@ -396,3 +396,42 @@ Docker services:
 * AI services
 
 This separation minimizes filesystem complexity, avoids Docker permission issues, simplifies hardware acceleration, and keeps infrastructure modular and maintainable.
+
+---
+
+# Repository Guide (Docker Compose, Dokploy)
+
+This repo holds only the Docker side: Compose files, the `Caddyfile`, and docs. There is no application code, build, lint, or test step. `README.md` has per-service setup detail.
+
+## Layout and Stack Wiring
+
+* Root `docker-compose.yml` is only an `include:` list of `stacks/<name>/docker-compose.yml`. Each stack is self-contained and has its own README where it needs setup steps.
+* Commenting out an include line disables a stack. Currently disabled: `postgres`, `redis`, `bazarr`. `scrob` and `pihole` exist in `stacks/` but are not in the include list. Check the include list for what actually deploys; README's "all stacks are included" is not literally true.
+* `postgres` and `redis` are shared dependencies that other stacks assume are already running. There is no `depends_on`.
+* Relative paths in an included file resolve against that file's directory. `../files/` from a stack means `stacks/files/`, which is gitignored.
+* `Caddyfile` is an alternative to Dokploy's Traefik Domains tab. Never configure the same hostname in both. Only yamtrack, scrob, mealie, and paperless are proxied. `stats` is proxied by a host Caddy in a separate `proxy-tool` project.
+
+## Commands
+
+Deploy from the Dokploy UI (Compose path `./docker-compose.yml`). Local equivalents:
+
+```bash
+docker compose config                                      # validate the root include set
+docker compose -f stacks/<name>/docker-compose.yml config  # validate one stack
+docker compose -f stacks/<name>/docker-compose.yml up -d   # run one stack
+```
+
+Compose files require env vars (`${VAR:?err}`). `.env` is gitignored, so copy `.env.example` to `.env` first.
+
+## Conventions for Editing Stacks
+
+* Set `container_name` and `hostname` on every service.
+* Network: `dokploy-network` (`external: true`). Exceptions: host-network stacks (`seerr`, `bazarr`, `pihole`) must reach host-installed apps via `127.0.0.1`; `yamtrack`, `mealie`, and `scrob` also declare an `internal` network.
+* Ports use one of three patterns: container-only (`- 8000`, routed by Dokploy), loopback-only (`127.0.0.1:HOST:CONTAINER`), or host network. Avoid host port collisions. `7575` is reserved by Dokploy's nginx; `80`/`443` belong to the reverse proxy. Update the README host port map when adding a port.
+* Env vars go directly in `environment:` blocks. Use `${VAR:?err}` for required and `${VAR:-default}` for optional. No `env_file`.
+* Always set `deploy.resources.limits.memory`.
+* Logging: json-file with `max-size: 10m` and `max-file: 3`.
+* Volumes: named volumes for app state, because Dokploy re-clones the repo and wipes `stacks/files/`. `../files/` bind mounts only for disposable or consume/export dirs. External media uses absolute host paths: `/srv/media`, or `/mnt/d/Entertainment` when Docker runs in WSL2.
+* Pin image versions where the repo already does (for example `BAZARR_VERSION`). Upgrade deliberately.
+* Seek confirmation before adding a new service. Propose its stack, shared infra needs, volume strategy, and env vars first.
+* When a stack's env vars, ports, or domains change, update `.env.example`, the README services table and port map, and the `Caddyfile` if proxied.

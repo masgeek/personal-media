@@ -9,3 +9,4 @@ include:
   - stacks/homarr/docker-compose.yml
   #- stacks/bazarr/docker-compose.yml
   - stacks/transcode/docker-compose.yml
+  - stacks/suggestarr/docker-compose.yml
