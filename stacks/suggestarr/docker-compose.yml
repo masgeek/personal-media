@@ -1,6 +1,6 @@
 services:
   suggestarr:
-    image: ciuse99/suggestarr:${TAG:-latest}
+    image: ghcr.io/giuseppe99barchetta/suggestarr:${TAG:-latest}
     container_name: suggestarr
     hostname: suggestarr
     restart: unless-stopped
