@@ -15,7 +15,7 @@ services:
     pull_policy: always
     environment:
       DEBUG: ${DEBUG:-false}
-      TZ: ${TZ:-UTC}
+      TZ: ${TZ:-Africa/Nairobi}
       ADMIN_ENABLED: ${ADMIN_ENABLED:-false}
       SECRET: ${SECRET:?SECRET is required}
       REDIS_URL: ${REDIS_URL:-redis://cache:6379}

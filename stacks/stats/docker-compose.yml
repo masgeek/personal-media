@@ -14,7 +14,7 @@ services:
       POSTGRES_DB: ${DB_DATABASE:-jellyglance}
       # Changing this invalidates every existing login, so keep it stable.
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
-      TZ: ${TZ:-UTC}
+      TZ: ${TZ:-Africa/Nairobi}
       JS_PUBLIC_URL: ${JELLYGLANCE_PUBLIC_URL:-https://stat.munywele.co.ke}
       CONFIG_DIR: /app/config
       BACKUP_DIR: /app/backups

@@ -23,7 +23,7 @@ services:
       MEALIE__SECRET_KEY: ${MEALIE_SECRET_KEY:?err}
       MEALIE__ALLOW_SIGNUP: ${MEALIE_ALLOW_SIGNUP:-true}
       MEALIE__DEFAULT_GROUP: Home
-      MEALIE__TZ: ${TZ:-UTC}
+      MEALIE__TZ: ${TZ:-Africa/Nairobi}
     ports:
         - "127.0.0.1:8925:9000" 
     volumes:

@@ -8,7 +8,7 @@ services:
     environment:
       PUID: 1000
       PGID: 1000
-      TZ: ${TZ:-UTC}
+      TZ: ${TZ:-Africa/Nairobi}
     volumes:
       - bazarr-config:/config
       - "/mnt/d/Entertainment/MOVIES:/movies"

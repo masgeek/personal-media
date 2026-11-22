@@ -14,7 +14,7 @@ services:
       PAPERLESS_SECRET_KEY: ${PAPERLESS_SECRET_KEY:?err}
       PAPERLESS_URL: ${PAPERLESS_URL:-https://paperless.munywele.co.ke}
       PAPERLESS_CSRF_TRUSTED_ORIGINS: ${PAPERLESS_CSRF_TRUSTED_ORIGINS:-["https://paperless.munywele.co.ke"]}
-      PAPERLESS_TIME_ZONE: ${TZ:-UTC}
+      PAPERLESS_TIME_ZONE: ${TZ:-Africa/Nairobi}
       PAPERLESS_OCR_LANGUAGE: ${PAPERLESS_OCR_LANGUAGE:-eng}
     ports:
       - "127.0.0.1:8890:8010"

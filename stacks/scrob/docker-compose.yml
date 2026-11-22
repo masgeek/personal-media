@@ -14,7 +14,7 @@ services:
     restart: unless-stopped
     # pull_policy: always
     environment:
-        TZ: ${TZ:-UTC}
+        TZ: ${TZ:-Africa/Nairobi}
         DATABASE_URL: ${DATABASE_URL:?DATABASE_URL IS required}
         SECRET_KEY: ${SECRET:?SECRET is required}
         SERVER_URL: ${SERVER_URL:-https://scrob.munywele.co.ke}
