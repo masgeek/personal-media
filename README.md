@@ -18,7 +18,7 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 | **transcode** | Library video optimisation and conversion | `stacks/transcode/` | 5000 | `19200:5000` |
 | **scrob** | Movie and TV tracking with Trakt scrobbling | `stacks/scrob/` | 7330 | `127.0.0.1:8900` |
 | **pihole** | Network-wide ad blocking via DNS | `stacks/pihole/` | 8081, 53 | host network |
-| **suggestarr** | Media suggestions based on watch history, sent to Seerr | `stacks/suggestarr/` | 5000 | `5000:5000` |
+| **suggestarr** | Media suggestions based on watch history, sent to Seerr | `stacks/suggestarr/` | 5000 | host network |
 
 `scrob` and `pihole` are not included in the root `docker-compose.yml`, so they do not start on deploy. See [Reverse Proxy with Caddy](#reverse-proxy-with-caddy).
 
@@ -123,12 +123,12 @@ Homarr has read-only access to `/var/run/docker.sock` for Docker integration. Th
 
 ### Dokploy
 - **`container_name` + `hostname`** — set on every service for predictable DNS and container naming.
-- **Network** — `dokploy-network` (external: true) is the default for every service. Exceptions are the host-network stacks (`seerr`, `bazarr`, `pihole`), which must reach host-installed apps, and the `internal` network declared by `yamtrack`, `mealie`, and `scrob` alongside `dokploy-network`.
+- **Network** — `dokploy-network` (external: true) is the default for every service. Exceptions are the host-network stacks (`seerr`, `bazarr`, `pihole`, `suggestarr`), which must reach host-installed apps, and the `internal` network declared by `yamtrack`, `mealie`, and `scrob` alongside `dokploy-network`.
 - **Ports** — three patterns are in use, and the table above shows which applies to each service:
   - **Container-only** (`- 8000`) is the default. Dokploy/Traefik routes to the service over `dokploy-network`, so no host port is published.
   - **Loopback-only** (`- "127.0.0.1:8800:8000"`) publishes a host port bound to `127.0.0.1` for local-only debugging. It is not reachable from the LAN. Note the host port usually differs from the container port.
   - **Host network** (`network_mode: host`) is required for services that must reach host-installed apps such as Jellyfin, Sonarr, and Radarr through `127.0.0.1`, and for Pi-hole's DNS on port 53. These services cannot join `dokploy-network`, so Dokploy cannot route to them by name and they are reached on the host port directly.
-- **Host port map** — loopback `8800`, `8900`, `8925`, `8950`; published `5000`, `7576`, `19200`; host-network `5055`, `6767`, `8081`, `53`. Port `7575` is reserved by Dokploy's nginx, and `80`/`443` are owned by the reverse proxy. No two stacks claim the same host port.
+- **Host port map** — loopback `8800`, `8900`, `8925`, `8950`; published `7576`, `19200`; host-network `5000`, `5055`, `6767`, `8081`, `53`. Port `7575` is reserved by Dokploy's nginx, and `80`/`443` are owned by the reverse proxy. No two stacks claim the same host port.
 - **Env vars** — pass directly via `environment:` blocks. Use `${VAR:?err}` for required vars, `${VAR:-default}` for optional. No `env_file` — vars come from the environment (Dokploy UI / shell).
 - **Bind mounts** — two kinds. Config and app data the repo owns use `../files/`, which resolves to `stacks/files/`. External media uses an absolute host path, because it lives outside the repo and cannot be repo-relative.
 - **Resource limits** — always set `deploy.resources.limits.memory`.

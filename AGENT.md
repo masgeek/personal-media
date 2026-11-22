@@ -426,7 +426,7 @@ Compose files require env vars (`${VAR:?err}`). `.env` is gitignored, so copy `.
 ## Conventions for Editing Stacks
 
 * Set `container_name` and `hostname` on every service.
-* Network: `dokploy-network` (`external: true`). Exceptions: host-network stacks (`seerr`, `bazarr`, `pihole`) must reach host-installed apps via `127.0.0.1`; `yamtrack`, `mealie`, and `scrob` also declare an `internal` network.
+* Network: `dokploy-network` (`external: true`). Exceptions: host-network stacks (`seerr`, `bazarr`, `pihole`, `suggestarr`) must reach host-installed apps via `127.0.0.1`; `yamtrack`, `mealie`, and `scrob` also declare an `internal` network.
 * Ports use one of three patterns: container-only (`- 8000`, routed by Dokploy), loopback-only (`127.0.0.1:HOST:CONTAINER`), or host network. Avoid host port collisions. `7575` is reserved by Dokploy's nginx; `80`/`443` belong to the reverse proxy. Update the README host port map when adding a port.
 * Env vars go directly in `environment:` blocks. Use `${VAR:?err}` for required and `${VAR:-default}` for optional. No `env_file`.
 * Always set `deploy.resources.limits.memory`.
