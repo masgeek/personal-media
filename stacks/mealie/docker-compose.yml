@@ -11,7 +11,7 @@ services:
     image: ghcr.io/mealie-recipes/mealie:${MEALIE_TAG:-v3.20.1} 
     container_name: mealie
     hostname: mealie
-    restart: always
+    restart: unless-stopped
     pull_policy: always
     environment:
       MEALIE__DB_ENGINE: postgres

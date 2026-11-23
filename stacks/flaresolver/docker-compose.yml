@@ -16,6 +16,10 @@ services:
       timeout: 3s
       interval: 15s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
     logging:
       driver: json-file
       options:
