@@ -8,7 +8,7 @@ networks:
 
 services:
   scrob:
-    image: bellamy/scrob:${SCROB_TAG:-latest}
+    image: bellamy/scrob:${TAG:-latest}
     container_name: scrob
     hostname: scrob
     restart: unless-stopped

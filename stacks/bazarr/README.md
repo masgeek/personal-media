@@ -52,7 +52,7 @@ docker exec bazarr ls -ld /movies /tv
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `BAZARR_VERSION` | `1.6.0` | pinned image tag |
+| `TAG` | `latest` | image tag |
 | `BAZARR_PUID` | 1000 | user ID that writes subtitle files |
 | `BAZARR_PGID` | 1000 | group ID that writes subtitle files |
 

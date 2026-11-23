@@ -8,7 +8,7 @@ networks:
 
 services:
   yamtrack:
-    image: ghcr.io/fuzzygrim/yamtrack:${YAMTRACK_TAG:-latest}
+    image: ghcr.io/fuzzygrim/yamtrack:${TAG:-latest}
     container_name: yamtrack
     hostname: yamtrack
     restart: unless-stopped

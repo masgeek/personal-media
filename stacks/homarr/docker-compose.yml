@@ -1,6 +1,6 @@
 services:
   homarr:
-    image: ghcr.io/homarr-labs/homarr:${HOMARR_VERSION:-latest}
+    image: ghcr.io/homarr-labs/homarr:${TAG:-latest}
     container_name: homarr
     hostname: homarr
     restart: unless-stopped

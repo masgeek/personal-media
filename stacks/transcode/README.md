@@ -174,9 +174,9 @@ to be undone, since the toolkit installation is harmless while unused.
 
 ## Image Tag
 
-`TRANSCODE_TAG` defaults to `stable`. FileFlows updates `latest` frequently, up
-to daily, and it can carry experimental changes. Monthly stable releases are the
-safer choice for unattended operation.
+`TAG` defaults to `latest`. FileFlows updates `latest` frequently, up
+to daily, and it can carry experimental changes. Set `TAG=stable` for the monthly
+stable releases, which are safer for unattended operation.
 
 Other published tags:
 

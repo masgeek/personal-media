@@ -8,7 +8,7 @@ networks:
 
 services:
   mealie:
-    image: ghcr.io/mealie-recipes/mealie:${MEALIE_TAG:-v3.20.1} 
+    image: ghcr.io/mealie-recipes/mealie:${TAG:-latest} 
     container_name: mealie
     hostname: mealie
     restart: unless-stopped

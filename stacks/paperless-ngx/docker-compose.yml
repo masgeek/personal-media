@@ -1,6 +1,6 @@
 services:
   paperless:
-    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    image: ghcr.io/paperless-ngx/paperless-ngx:${TAG:-latest}
     container_name: paperless
     hostname: paperless
     restart: unless-stopped

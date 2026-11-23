@@ -26,7 +26,7 @@ The consolidated `Caddyfile` at the repository root proxies `scrob.munywele.co.k
 | `SECRET` | session and token signing key |
 | `SERVER_URL` | public URL, must match the proxied hostname |
 
-Optional: `SCROB_TAG` (defaults to `latest`), `REGISTRATION` (defaults to `false`), `REQUIRE_EMAIL_VALIDATION` (defaults to `false`), `REGISTRATION_MAX_ALLOWED_USERS` (defaults to `0`).
+Optional: `TAG` (defaults to `latest`), `REGISTRATION` (defaults to `false`), `REQUIRE_EMAIL_VALIDATION` (defaults to `false`), `REGISTRATION_MAX_ALLOWED_USERS` (defaults to `0`).
 
 `REGISTRATION=false` means no new accounts can be created through the UI. Create the first account with registration temporarily enabled, then set it back to `false`.
 

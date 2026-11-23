@@ -432,6 +432,6 @@ Compose files require env vars (`${VAR:?err}`). `.env` is gitignored, so copy `.
 * Always set `deploy.resources.limits.memory`.
 * Logging: json-file with `max-size: 10m` and `max-file: 3`.
 * Volumes: named volumes for app state, because Dokploy re-clones the repo and wipes `stacks/files/`. `../files/` bind mounts only for disposable or consume/export dirs. External media uses absolute host paths: `/srv/media`, or `/mnt/d/Entertainment` when Docker runs in WSL2.
-* Pin image versions where the repo already does (for example `BAZARR_VERSION`). Upgrade deliberately.
+* Image tag: use `image: <name>:${TAG:-latest}` in every stack except `postgres` and `redis`, which stay pinned to a major version. `TAG` is shared by all included stacks, so setting it changes every image at once.
 * Seek confirmation before adding a new service. Propose its stack, shared infra needs, volume strategy, and env vars first.
 * When a stack's env vars, ports, or domains change, update `.env.example`, the README services table and port map, and the `Caddyfile` if proxied.

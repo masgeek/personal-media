@@ -59,7 +59,7 @@ After deployment, open `http://<host-ip>:6767` and configure:
 
 The path mappings are required because Sonarr and Radarr run on Windows and report `D:\Entertainment\...` in their API responses, while Bazarr sees the same files at `/tv` and `/movies`. The container paths are what you use when configuring Bazarr itself.
 
-The Bazarr image is pinned through `BAZARR_VERSION`. Update that value deliberately when upgrading rather than tracking `latest`. Restrict access to port `6767` with the host firewall or an authenticated internal reverse proxy.
+The Bazarr image follows `TAG` (default `latest`). Restrict access to port `6767` with the host firewall or an authenticated internal reverse proxy.
 
 ## Homarr Setup
 

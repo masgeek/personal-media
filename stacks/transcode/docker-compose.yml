@@ -1,6 +1,6 @@
 services:
   transcode:
-    image: revenz/fileflows:${TRANSCODE_TAG:-stable}
+    image: revenz/fileflows:${TAG:-latest}
     container_name: transcode
     hostname: transcode
     restart: unless-stopped

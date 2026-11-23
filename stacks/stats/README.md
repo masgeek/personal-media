@@ -45,7 +45,7 @@ this repository handles credentials.
 | `DB_USERNAME` / `DB_PASSWORD` | Database account. Required |
 | `JWT_SECRET` | Signs session tokens. **Changing it logs everyone out** |
 | `JELLYGLANCE_PUBLIC_URL` | Used when building webhook card-image URLs |
-| `JELLYGLANCE_TAG` | Image tag |
+| `TAG` | Image tag |
 
 Generate the signing secret with:
 

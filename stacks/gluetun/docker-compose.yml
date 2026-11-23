@@ -1,7 +1,7 @@
 ---
 services:
   gluetun:
-    image: qmcgaw/gluetun
+    image: qmcgaw/gluetun:${TAG:-latest}
     container_name: gluetun
     hostname: gluetun
     restart: unless-stopped
