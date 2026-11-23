@@ -405,18 +405,17 @@ This repo holds only the Docker side: Compose files, the `Caddyfile`, and docs. 
 
 ## Layout and Stack Wiring
 
-* Root `docker-compose.yml` is only an `include:` list of `stacks/<name>/docker-compose.yml`. Each stack is self-contained and has its own README where it needs setup steps.
-* Commenting out an include line disables a stack. Currently disabled: `postgres`, `redis`, `bazarr`. `scrob` and `pihole` exist in `stacks/` but are not in the include list. Check the include list for what actually deploys; README's "all stacks are included" is not literally true.
+* Each stack under `stacks/<name>/` is self-contained, deployed as its own Dokploy Compose service, and has its own README where it needs setup steps.
+* Root `docker-compose.yml` is a demo `include:` list of some stacks. It is not used for deployment, so do not rely on it to know what runs.
 * `postgres` and `redis` are shared dependencies that other stacks assume are already running. There is no `depends_on`.
 * Relative paths in an included file resolve against that file's directory. `../files/` from a stack means `stacks/files/`, which is gitignored.
 * `Caddyfile` is an alternative to Dokploy's Traefik Domains tab. Never configure the same hostname in both. Only yamtrack, scrob, mealie, and paperless are proxied. `stats` is proxied by a host Caddy in a separate `proxy-tool` project.
 
 ## Commands
 
-Deploy from the Dokploy UI (Compose path `./docker-compose.yml`). Local equivalents:
+Deploy each stack from the Dokploy UI (Compose path `./stacks/<name>/docker-compose.yml`). Local equivalents:
 
 ```bash
-docker compose config                                      # validate the root include set
 docker compose -f stacks/<name>/docker-compose.yml config  # validate one stack
 docker compose -f stacks/<name>/docker-compose.yml up -d   # run one stack
 ```
@@ -432,6 +431,6 @@ Compose files require env vars (`${VAR:?err}`). `.env` is gitignored, so copy `.
 * Always set `deploy.resources.limits.memory`.
 * Logging: json-file with `max-size: 10m` and `max-file: 3`.
 * Volumes: named volumes for app state, because Dokploy re-clones the repo and wipes `stacks/files/`. `../files/` bind mounts only for disposable or consume/export dirs. External media uses absolute host paths: `/srv/media`, or `/mnt/d/Entertainment` when Docker runs in WSL2.
-* Image tag: use `image: <name>:${TAG:-latest}` in every stack except `postgres` and `redis`, which stay pinned to a major version. `TAG` is shared by all included stacks, so setting it changes every image at once.
+* Image tag: use `image: <name>:${TAG:-latest}` in every stack except `postgres` and `redis`, which stay pinned to a major version. `TAG` is set per stack in Dokploy.
 * Seek confirmation before adding a new service. Propose its stack, shared infra needs, volume strategy, and env vars first.
 * When a stack's env vars, ports, or domains change, update `.env.example`, the README services table and port map, and the `Caddyfile` if proxied.

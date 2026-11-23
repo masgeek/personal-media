@@ -20,15 +20,17 @@ Docker Compose-based media infrastructure organized into logical stacks, configu
 | **pihole** | Network-wide ad blocking via DNS | `stacks/pihole/` | 8081, 53 | host network |
 | **suggestarr** | Media suggestions based on watch history, sent to Seerr | `stacks/suggestarr/` | 5000 | host network |
 
-`scrob` and `pihole` are not included in the root `docker-compose.yml`, so they do not start on deploy. See [Reverse Proxy with Caddy](#reverse-proxy-with-caddy).
+The root `docker-compose.yml` is a demo that includes a subset of the stacks. It is not used for deployment; deploy each stack on its own, as described below.
 
 ## Deploy on Dokploy
 
+Each stack is deployed as its own Dokploy Compose service, with its own environment:
+
 1. Create a new **Compose** service in Dokploy
 2. Set the **Source** to this Git repository
-3. Set **Compose Path** to `./docker-compose.yml`
-4. Set environment variables in the Dokploy UI (see `.env.example`)
-5. Configure domains via the **Domains** tab for each service
+3. Set **Compose Path** to `./stacks/<name>/docker-compose.yml`
+4. Set that stack's environment variables in the Dokploy UI (see `.env.example`)
+5. Configure the domain via the **Domains** tab if the service is proxied
 6. Click **Deploy**
 
 > **Bind mount paths** — `../files/` in a stack file resolves to `stacks/files/`, inside this repository. Each included Compose file resolves relative paths against its own directory, not the root, so `stacks/paperless-ngx/` plus `../files/` gives `stacks/files/`. This is intentional: the path is stable across redeploys and does not depend on where the repository is cloned.
@@ -139,7 +141,7 @@ Homarr has read-only access to `/var/run/docker.sock` for Docker integration. Th
 - No `depends_on` — all dependencies (postgres, redis) are external and assumed available.
 - All services connect via `dokploy-network`.
 - A new service goes in a new or existing stack file depending on category.
-- All stacks are included from root `docker-compose.yml`.
+- The root `docker-compose.yml` is a demo only. Deploy each stack separately.
 
 ### Volumes
 
@@ -174,12 +176,12 @@ Only the trackers, Mealie, and Paperless-ngx are proxied. Everything else in
 this repository is an internal service reached over the LAN, and is deliberately
 absent from the Caddyfile:
 
-| Service | Domain | Upstream | In root compose |
-|---------|--------|----------|-----------------|
-| yamtrack | `track.munywele.co.ke` | `yamtrack:8000` | yes |
-| scrob | `scrob.munywele.co.ke` | `scrob:7330` | no |
-| mealie | `mealie.munywele.co.ke` | `mealie:9000` | yes |
-| paperless | `paperless.munywele.co.ke` | `paperless:8010` | yes |
+| Service | Domain | Upstream |
+|---------|--------|----------|
+| yamtrack | `track.munywele.co.ke` | `yamtrack:8000` |
+| scrob | `scrob.munywele.co.ke` | `scrob:7330` |
+| mealie | `mealie.munywele.co.ke` | `mealie:9000` |
+| paperless | `paperless.munywele.co.ke` | `paperless:8010` |
 
 Reached over the LAN only, not proxied:
 
@@ -196,15 +198,6 @@ redis are internal dependencies and should never be exposed over HTTP.
 
 Several of the LAN-only services have no built-in authentication, including
 homarr, bazarr, and pihole. Restrict them with the host firewall.
-
-`scrob` and `pihole` are tracked in git but are not listed in the root
-`docker-compose.yml`, so they do not start on a Dokploy deploy. Add the include
-line for each one you want running:
-
-```yaml
-- stacks/scrob/docker-compose.yml
-- stacks/pihole/docker-compose.yml
-```
 
 All proxied services run on `dokploy-network`, so Caddy reaches them by
 service name and does not need the host gateway:
